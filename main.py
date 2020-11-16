@@ -28,7 +28,7 @@ from test import Tester
 
 from dataloader.skmt import SkmtDataSet
 from modeling import build_skmtnet
-[]
+
 def main(args,logger,summary):
     cudnn.enabled = True     # Enables bencnmark mode in cudnn, to enable the inbuilt
     cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
@@ -55,7 +55,7 @@ def main(args,logger,summary):
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head='deeplab',
+    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head='danet',
                           num_classes=args.num_classes,output_stride = 16)
 
     logger.info("======> computing network parameters")
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
-    parser.add_argument('--batch_size', default=2, type=int)
+    parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
     parser.add_argument('--crop_size', default=512, type=int)
     parser.add_argument('--max_epochs', type=int, help='the number of epochs: default 100 ')
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--show_val_interval', default=1, type=int)
     parser.add_argument('--savedir', default="./runs", help="directory to save the model snapshot")
     # parser.add_argument('--logFile', default= "log.txt", help = "storing the training and validation logs")
-    parser.add_argument('--gpus', type=str, default='1')
+    parser.add_argument('--gpus', type=str, default='0')
     parser.add_argument('--resume', default=None, help="the resume model path")
     args = parser.parse_args()
 

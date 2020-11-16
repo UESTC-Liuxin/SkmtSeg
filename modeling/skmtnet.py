@@ -21,7 +21,7 @@ class SkmtNet(nn.Module):
         self.num_classes=num_classes
 
     def forward(self, input):
-        img=input['image']
+        img = input['image']
         base_out=self.backbone(img)
 
         trunk_out = self.trunk(base_out)

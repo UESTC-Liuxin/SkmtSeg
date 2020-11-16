@@ -7,8 +7,8 @@ class FocalLoss(nn.Module):
     def __init__(self,gamma=2, alpha=0.5):
         super(FocalLoss,self).__init__()
 
-        self.gamma=gamma
-        self.alpha=alpha
+        self.gamma = gamma
+        self.alpha = alpha
         self.ce_loss = nn.CrossEntropyLoss(weight=self.weight, ignore_index=self.ignore_index,
                                         size_average=self.size_average)
 
@@ -38,12 +38,12 @@ class Loss(nn.Module):
 
         #两个参数
         self.sigma = nn.Parameter(torch.rand([1]))
-        self.beta =nn.Parameter(torch.rand([1]))
-        self.args=args
+        self.beta = nn.Parameter(torch.rand([1]))
+        self.args = args
 
         if(self.args.auxiliary is not None):
-            self.loss_auxiliary=self.build_loss(mode=mode)
-        self.loss_trunk=self.build_loss(mode=mode)
+            self.loss_auxiliary = self.build_loss(mode=mode)
+        self.loss_trunk = self.build_loss(mode=mode)
 
     def build_loss(self,mode):
         if mode == 'ce':
@@ -51,6 +51,7 @@ class Loss(nn.Module):
                                         size_average=self.size_average)
         elif(mode =='focal'):
             return FocalLoss()
+
         else:
             raise NotImplementedError
 

@@ -11,12 +11,10 @@ from modeling.backbone import build_backbone
 class DeepLab(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepLab, self).__init__()
-
-
         self.backbone=backbone
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
-        self.output_stride=output_stride
+        self.output_stride = output_stride
         if freeze_bn:
             self.freeze_bn()
 

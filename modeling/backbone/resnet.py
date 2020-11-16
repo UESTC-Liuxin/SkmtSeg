@@ -44,7 +44,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, name,block, layers, output_stride, BatchNorm, pretrained=True):
+    def __init__(self,name,block, layers, output_stride, BatchNorm,num_classes, pretrained=True):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.name=name
@@ -70,6 +70,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=strides[2], dilation=dilations[2], BatchNorm=BatchNorm)
         self.layer4 = self._make_MG_unit(block, 512, blocks=blocks, stride=strides[3], dilation=dilations[3], BatchNorm=BatchNorm)
         # self.layer4 = self._make_layer(block, 512, layers[3], stride=strides[3], dilation=dilations[3], BatchNorm=BatchNorm)
+
         self._init_weight()
 
         if pretrained:
@@ -115,13 +116,15 @@ class ResNet(nn.Module):
     def forward(self, input):
         x = self.conv1(input)
         x = self.bn1(x)
-        x0=x = self.relu(x)
+        x0= x = self.relu(x)
         x1=x = self.maxpool(x)
 
         x2=x = self.layer1(x)
         x3=x = self.layer2(x)
         x4=x = self.layer3(x)
         x5= self.layer4(x)
+
+
         return (x5,x4,x3,x2,x1,x0)
 
     def get_1x_lr_params(self):
@@ -161,20 +164,20 @@ class ResNet(nn.Module):
         state_dict.update(model_dict)
         self.load_state_dict(state_dict)
 
-def ResNet101(output_stride, BatchNorm, pretrained=True):
+def ResNet101(output_stride, BatchNorm, num_classes,pretrained=True):
     """Constructs a ResNet-101 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet("resnet101",Bottleneck, [3, 4, 23, 3], output_stride, BatchNorm, pretrained=pretrained)
+    model = ResNet("resnet101",Bottleneck, [3, 4, 23, 3], output_stride, BatchNorm, num_classes,pretrained=pretrained)
     return model
 
-def ResNet50(output_stride, BatchNorm, pretrained=True):
+def ResNet50(output_stride, BatchNorm,num_classes,pretrained=True):
     """Constructs a ResNet-101 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet("resnet50",Bottleneck, [3, 4, 6, 3], output_stride, BatchNorm, pretrained=pretrained)
+    model = ResNet("resnet50",Bottleneck, [3, 4, 6, 3], output_stride, BatchNorm, num_classes,pretrained=pretrained)
     return model
 
 if __name__ == "__main__":
