@@ -127,3 +127,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+
+#pycharm
+
+.idea
+idea/
+
+# data
+data
+
+# checkpoints
+*.pth
+
+# works_temp
+runs
+
+
