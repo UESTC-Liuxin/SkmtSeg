@@ -42,9 +42,6 @@ def main(args,logger,summary):
     torch.manual_seed(seed)  # set random seed for cpu
 
 
-    # train_set = VaiHinGen(root=args.root, split='trainl',outer_size=2*args.image_size,centre_size=args.image_size)
-    # test_set  = VaiHinGen(root=args.root, split='testl',outer_size=2*args.image_size,centre_size=args.image_size)
-
     train_set=SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
@@ -153,7 +150,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
 
     parser.add_argument('--model', default='skmtnet', type=str)
-    parser.add_argument('--auxiliary_head', default=None, type=str)
+    parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplabv3', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
