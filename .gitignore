@@ -137,11 +137,12 @@ idea/
 
 # data
 data
+data/
 
 # checkpoints
 *.pth
 
 # works_temp
 runs
-
+runs/
 
