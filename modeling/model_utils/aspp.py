@@ -30,9 +30,9 @@ class _ASPPModule(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-class _ASPPModule2(nn.Module):
+class _DepthwiseSeparaConvASPPModule(nn.Module):
     def __init__(self, inplanes, planes, kernel_size, padding, dilation, BatchNorm):
-        super(_ASPPModule2, self).__init__()
+        super(_DepthwiseSeparaConvASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, inplanes, kernel_size=kernel_size, groups=inplanes,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
         self.atrous_conv2 = nn.Conv2d(inplanes, planes, 1, bias=False)
@@ -76,9 +76,9 @@ class ASPP(nn.Module):
         else:
             raise NotImplementedError
 
-        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=BatchNorm)
-        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=BatchNorm)
-        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm)
+        self.aspp1 = _DepthwiseSeparaConvASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=BatchNorm)
+        self.aspp2 = _DepthwiseSeparaConvASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=BatchNorm)
+        self.aspp3 = _DepthwiseSeparaConvASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm)
         self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm)
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),

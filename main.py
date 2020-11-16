@@ -55,7 +55,7 @@ def main(args,logger,summary):
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head='danet',
+    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes,output_stride = 16)
 
     logger.info("======> computing network parameters")
@@ -153,7 +153,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
 
     parser.add_argument('--model', default='skmtnet', type=str)
-    parser.add_argument('--auxiliary', default=None, type=str)
+    parser.add_argument('--auxiliary_head', default=None, type=str)
+    parser.add_argument('--trunk_head', default='deeplabv3', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
     parser.add_argument('--crop_size', default=512, type=int)

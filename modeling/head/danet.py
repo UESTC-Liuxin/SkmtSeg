@@ -87,25 +87,25 @@ class DANetHead(nn.Module):
         return sasc_output
 
 
-def get_danet(dataset='pascal_voc', backbone='resnet50', pretrained=False,
-           root='~/.encoding/models', **kwargs):
-    r"""DANet model from the paper `"Dual Attention Network for Scene Segmentation"
-    <https://arxiv.org/abs/1809.02983.pdf>`
-    """
-    acronyms = {
-        'pascal_voc': 'voc',
-        'pascal_aug': 'voc',
-        'pcontext': 'pcontext',
-        'ade20k': 'ade',
-        'cityscapes': 'cityscapes',
-    }
-    # infer number of classes
-    from ...datasets import datasets, VOCSegmentation, VOCAugSegmentation, ADE20KSegmentation
-    model = DANet(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
-    if pretrained:
-        from .model_store import get_model_file
-        model.load_state_dict(torch.load(
-            get_model_file('fcn_%s_%s'%(backbone, acronyms[dataset]), root=root)),
-            strict=False)
-    return model
+# def get_danet(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+#            root='~/.encoding/models', **kwargs):
+#     r"""DANet model from the paper `"Dual Attention Network for Scene Segmentation"
+#     <https://arxiv.org/abs/1809.02983.pdf>`
+#     """
+#     acronyms = {
+#         'pascal_voc': 'voc',
+#         'pascal_aug': 'voc',
+#         'pcontext': 'pcontext',
+#         'ade20k': 'ade',
+#         'cityscapes': 'cityscapes',
+#     }
+#     # infer number of classes
+#     from ...datasets import datasets, VOCSegmentation, VOCAugSegmentation, ADE20KSegmentation
+#     model = DANet(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+#     if pretrained:
+#         from .model_store import get_model_file
+#         model.load_state_dict(torch.load(
+#             get_model_file('fcn_%s_%s'%(backbone, acronyms[dataset]), root=root)),
+#             strict=False)
+#     return model
 
