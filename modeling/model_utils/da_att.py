@@ -4,16 +4,13 @@
 # Copyright (c) 2018
 ###########################################################################
 
-import numpy as np
 import torch
-import math
-from torch.nn import Module, Sequential, Conv2d, ReLU,AdaptiveMaxPool2d, AdaptiveAvgPool2d, \
-    NLLLoss, BCELoss, CrossEntropyLoss, AvgPool2d, MaxPool2d, Parameter, Linear, Sigmoid, Softmax, Dropout, Embedding
-from torch.nn import functional as F
-from torch.autograd import Variable
+from torch.nn import Module,Conv2d
+from torch.nn import Parameter, Softmax
+
+
 torch_ver = torch.__version__[:3]
 
-__all__ = ['PAM_Module', 'CAM_Module']
 
 
 class PAM_Module(Module):

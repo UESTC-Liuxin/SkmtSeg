@@ -8,6 +8,7 @@
 """
 from modeling.head import fcn,deeplabv3,danet
 from modeling.head import auxiliary_fcn
+
 def build_head(head,backbone,BatchNorm, output_stride, num_classes):
 
     if(head=="fcn"):

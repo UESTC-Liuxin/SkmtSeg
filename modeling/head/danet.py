@@ -10,25 +10,29 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
-from torch.nn.functional import upsample,normalize
 from modeling.model_utils.da_att import PAM_Module
 from modeling.model_utils.da_att import CAM_Module
 from modeling.backbone import build_backbone
 
-__all__ = ['DANet', 'get_danet']
 
 class DANet(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DANet, self).__init__()
         self.backbone = backbone
-        self.head = DANetHead(2048, num_classes, BatchNorm)
+        if(backbone in ["resnet50","resnet101"]):
+            in_channels=2048
+        else:
+            raise NotImplementedError
+
+        self.head = DANetHead(in_channels, num_classes, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
             self.freeze_bn()
 
     def forward(self, inputs):
         x = self.head(inputs[0])
-        x = upsample(x, (512,512))
+        x = F.interpolate(x, scale_factor=self.output_stride,mode="bilinear",align_corners=True)
+
         '''  x = list(x)
         x[0] = upsample(x[0], self.output_stride, **self._up_kwargs)
         x[1] = upsample(x[1], self.output_stride, **self._up_kwargs)
@@ -87,25 +91,25 @@ class DANetHead(nn.Module):
         return sasc_output
 
 
-def get_danet(dataset='pascal_voc', backbone='resnet50', pretrained=False,
-           root='~/.encoding/models', **kwargs):
-    r"""DANet model from the paper `"Dual Attention Network for Scene Segmentation"
-    <https://arxiv.org/abs/1809.02983.pdf>`
-    """
-    acronyms = {
-        'pascal_voc': 'voc',
-        'pascal_aug': 'voc',
-        'pcontext': 'pcontext',
-        'ade20k': 'ade',
-        'cityscapes': 'cityscapes',
-    }
-    # infer number of classes
-    from ...datasets import datasets, VOCSegmentation, VOCAugSegmentation, ADE20KSegmentation
-    model = DANet(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
-    if pretrained:
-        from .model_store import get_model_file
-        model.load_state_dict(torch.load(
-            get_model_file('fcn_%s_%s'%(backbone, acronyms[dataset]), root=root)),
-            strict=False)
-    return model
+# def get_danet(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+#            root='~/.encoding/models', **kwargs):
+#     r"""DANet model from the paper `"Dual Attention Network for Scene Segmentation"
+#     <https://arxiv.org/abs/1809.02983.pdf>`
+#     """
+#     acronyms = {
+#         'pascal_voc': 'voc',
+#         'pascal_aug': 'voc',
+#         'pcontext': 'pcontext',
+#         'ade20k': 'ade',
+#         'cityscapes': 'cityscapes',
+#     }
+#     # infer number of classes
+#     from ...datasets import datasets, VOCSegmentation, VOCAugSegmentation, ADE20KSegmentation
+#     model = DANet(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+#     if pretrained:
+#         from .model_store import get_model_file
+#         model.load_state_dict(torch.load(
+#             get_model_file('fcn_%s_%s'%(backbone, acronyms[dataset]), root=root)),
+#             strict=False)
+#     return model
 
