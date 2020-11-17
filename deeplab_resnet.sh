@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-GPUS="0"
+GPUS="1"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --batch_size 4   \
               --auxiliary "fcn"  \

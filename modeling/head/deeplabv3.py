@@ -21,7 +21,7 @@ class DeepLab(nn.Module):
     def forward(self, inputs):
         x = self.aspp(inputs[0])
         if(self.backbone=='xception'):#不同的backbone有不同的输出，处理不同
-            low_level_feat=inputs[1]
+            low_level_feat = inputs[1]
         elif(self.backbone in ['resnet50','resnet101']):
             low_level_feat = inputs[3]
         else:

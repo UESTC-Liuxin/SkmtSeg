@@ -15,11 +15,11 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 
-dataset_root = '/home/liuxin/Documents/CV/Project/SKMT/mmsegmentation/data/SKMT/Seg'
+dataset_root = 'data/SKMT/Seg'
 dataType = 'default'
 annFile = '{}/annotations/instances_{}.json'.format(dataset_root, dataType)
 img_path = os.path.join(dataset_root, 'JPEGImages')
-seg_img_path = os.path.join(dataset_root, 'seg_map')
+seg_img_path = os.path.join(dataset_root, 'SegmentationClass')
 
 
 # 读取coco文件
@@ -80,12 +80,12 @@ def count_anns_category(coco):
 
 
 if __name__ == '__main__':
-    # countor_dict=count_anns_category(coco)
-    # print(countor_dict)
-    # x=[index for index in range(len(countor_dict))]
-    # y=countor_dict.values()
-    # plt.bar(x,y,label='the dist of cate')
-    # plt.show()
-    # mean_dict, std_dict = count_rgb(img_path)
-    # print('mean:', mean_dict)
-    # print('std:', std_dict)
+    #countor_dict=count_anns_category(coco)
+    #print(countor_dict)
+    #x=[index for index in range(len(countor_dict))]
+    #y=countor_dict.values()
+    #plt.bar(x,y,label='the dist of cate')
+    #plt.show()
+    mean_dict, std_dict = count_rgb(img_path)
+    print('mean:', mean_dict)
+    print('std:', std_dict)
