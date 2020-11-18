@@ -12,7 +12,7 @@ python main.py --batch_size 4   \
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/deeplab_resnet_dws_fcn/" \
+              --savedir "./runs/deeplab_resnet_dws_fcn_focal/" \
               --gpus $GPUS
 
 

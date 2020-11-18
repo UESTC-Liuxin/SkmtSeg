@@ -132,6 +132,12 @@ class Loss(nn.Module):
 
 
 
+if __name__ =="__main__":
+    inputs=torch.rand(2,19,512,512)
+    target=torch.randint(high=12,size=(2,512,512))
+    criterion=FocalLoss()
+    loss=criterion(inputs,target)
+    print(loss)
 
 
 
