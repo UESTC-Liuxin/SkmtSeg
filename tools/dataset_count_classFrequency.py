@@ -26,8 +26,8 @@ def find_pic(img, array_list, pixs,n_class):
         n_class += 1
     return pixs, n_class
 
-def compute_class(pixs, n_class):
-    return pixs / (n_class * w * h)
+def compute_class(all_class, n_class):
+    return n_class / all_class
 
 def frequence():
     images_list_path = [os.path.join(images_path, i) for i in os.listdir(images_path)]
@@ -46,10 +46,11 @@ def frequence():
                 if (b,g,r) != (0, 0, 0):  
                     print((b,g,r))'''
         for ii, label in enumerate(SkmtDataSet.CLASSES):
-            if ii != 0:
-                class_pixs[ii], clss_n[ii] = find_pic(img, [ii,ii,ii], class_pixs[ii], clss_n[ii])
+            #if ii != 0:
+            class_pixs[ii], clss_n[ii] = find_pic(img, [ii,ii,ii], class_pixs[ii], clss_n[ii])
+    all_class = np.sum(clss_n)
     for ii, label in enumerate(SkmtDataSet.CLASSES):
-        f_class[ii] = compute_class(class_pixs[ii],clss_n[ii])
+        f_class[ii] = compute_class(all_class,clss_n[ii])
 
     for ii, label in enumerate(SkmtDataSet.CLASSES):
         print('{}: pixs:{:.0f} num:{:.0f}  frequent:{:.2f}'.format(label,class_pixs[ii], clss_n[ii],f_class[ii]))
