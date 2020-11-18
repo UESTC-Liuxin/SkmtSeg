@@ -15,7 +15,6 @@ from dataloader.skmt import SkmtDataSet
 dataset_root = '../data/SKMT/Seg'
 images_path = os.path.join(dataset_root, 'SegmentationClass')
 
-w, h = 600, 800
 
 
 def find_pic(img, array_list, pixs,n_class):

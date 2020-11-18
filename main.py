@@ -69,7 +69,7 @@ def main(args,logger,summary):
         os.makedirs(args.savedir)
 
     # setup optimization criterion
-    criterion = Loss(args)
+    criterion = Loss(args,weight=1-np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS),mode='focal')
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus

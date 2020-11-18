@@ -13,7 +13,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from metrics.metrics import runningScore, averageMeter
 from tqdm import tqdm
-from torchviz import make_dot
 
 class Trainer(object):
 
