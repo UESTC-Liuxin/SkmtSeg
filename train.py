@@ -96,7 +96,7 @@ class Trainer(object):
             #print(output)
             #g=make_dot(output['trunk_out'])
             #g.render('deep_danet',directory='/home/cyl/SkmtSeg',view=False)
-            loss=self.criterion(output,batch).cuda()
+            loss = self.criterion(output,batch).cuda()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()

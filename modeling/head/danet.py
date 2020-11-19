@@ -4,16 +4,10 @@
 # Copyright (c) 2018
 ###########################################################################
 from __future__ import division
-import os
-import numpy as np
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from modeling.model_utils.da_att import PAM_Module
 from modeling.model_utils.da_att import CAM_Module
-from modeling.backbone import build_backbone
-
 
 class DANet(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
@@ -89,27 +83,4 @@ class DANetHead(nn.Module):
         output.append(sa_output)
         output.append(sc_output)'''
         return sasc_output
-
-
-# def get_danet(dataset='pascal_voc', backbone='resnet50', pretrained=False,
-#            root='~/.encoding/models', **kwargs):
-#     r"""DANet model from the paper `"Dual Attention Network for Scene Segmentation"
-#     <https://arxiv.org/abs/1809.02983.pdf>`
-#     """
-#     acronyms = {
-#         'pascal_voc': 'voc',
-#         'pascal_aug': 'voc',
-#         'pcontext': 'pcontext',
-#         'ade20k': 'ade',
-#         'cityscapes': 'cityscapes',
-#     }
-#     # infer number of classes
-#     from ...datasets import datasets, VOCSegmentation, VOCAugSegmentation, ADE20KSegmentation
-#     model = DANet(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
-#     if pretrained:
-#         from .model_store import get_model_file
-#         model.load_state_dict(torch.load(
-#             get_model_file('fcn_%s_%s'%(backbone, acronyms[dataset]), root=root)),
-#             strict=False)
-#     return model
 
