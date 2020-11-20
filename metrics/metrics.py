@@ -2,7 +2,9 @@
 # https://github.com/wkentaro/pytorch-fcn/blob/master/torchfcn/utils.py
 
 import numpy as np
+
 np.seterr(divide='ignore', invalid='ignore')
+
 
 class runningScore(object):
     def __init__(self, n_classes):
@@ -34,7 +36,7 @@ class runningScore(object):
         # add evaluation matrix F1
         F1_score, mean_F1 = self.caluate_F1(hist)
         cls_F1 = dict(zip(range(self.n_classes), F1_score))
-        fwIoU = self.fwIoU(hist,self.n_classes)
+        fwIoU = self.fwIoU(hist, self.n_classes)
         acc = np.diag(hist).sum() / hist.sum()
         cls_acc = np.diag(hist) / hist.sum(axis=1)
         mean_acc = np.nanmean(cls_acc)
@@ -45,17 +47,14 @@ class runningScore(object):
         freq = hist.sum(axis=1) / hist.sum()
         fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
         cls_iu = dict(zip(range(self.n_classes), iu))
-        
-        #5-class iou
+
+        # 5-class iou
         target = [x for x in range(self.n_classes)]
         hist_8 = hist[target]
-        hist_8 = hist_8[:,target]
+        hist_8 = hist_8[:, target]
 
         iu_8 = np.diag(hist_8) / (hist_8.sum(axis=1) + hist_8.sum(axis=0) - np.diag(hist_8))
-        mean_iu_8=np.nanmean(iu_8)
-
-
-
+        mean_iu_8 = np.nanmean(iu_8)
 
         return (
             {
@@ -74,9 +73,9 @@ class runningScore(object):
         import pandas as pd
         F1_score = []
         for i in range(self.n_classes):
-            p = confusion_matrix[i,i]/sum(confusion_matrix[:,i])
-            R = confusion_matrix[i,i]/sum(confusion_matrix[i,:])
-            F1 = 2/(1/p + 1/R)
+            p = confusion_matrix[i, i] / sum(confusion_matrix[:, i])
+            R = confusion_matrix[i, i] / sum(confusion_matrix[i, :])
+            F1 = 2 / (1 / p + 1 / R)
             F1_score.append(F1)
         mean_F1 = np.asarray(F1_score).mean()
 
@@ -85,7 +84,7 @@ class runningScore(object):
     def fwIoU(self, confusion_matrix, num_classes):
         sum_sum_pij = 0
         fwIoU = 0
-        for i in range(num_classes):# for every class
+        for i in range(num_classes):  # for every class
             IoU = 0
             pii = confusion_matrix[i][i]
             sum_pij = 0
@@ -106,6 +105,7 @@ class runningScore(object):
 
 class averageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 
@@ -120,4 +120,3 @@ class averageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
