@@ -7,7 +7,7 @@
 @Created on: 2020/11/9 下午3:31
 """
 
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-ui
 
 import torch
 import torch.hub

@@ -8,10 +8,12 @@ from __future__ import print_function, division
 import os
 from PIL import Image
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 from mypath import Path
 from torchvision import transforms
-from dataloader import custom_transforms as tr
+from dataloader.transforms_utils import custom_transforms as tr
+from dataloader.transforms_utils import meta_transforms as meta_t
 
 class SkmtDataSet(Dataset):
     """
@@ -86,13 +88,23 @@ class SkmtDataSet(Dataset):
 
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
-        sample = {'image': _img, 'label': _target}
+        _section=self.get_section(index)
+
+        sample = {'image': _img, 'label': _target,'section':_section}
 
         for split in self.split:
             if split == "train":
                 return self.transform_tr(sample)
             elif split == 'val':
                 return self.transform_val(sample)
+
+    def get_section(self,index):
+        _name=self.images[index]
+        _name_split=_name.split('.')
+        image_name_split=_name_split[-1].split('_')
+        _section =image_name_split[0][-2]
+        print(_section)
+
 
     def _make_img_gt_point_pair(self, index):
         _img = Image.open(self.images[index]).convert('RGB')
@@ -106,7 +118,9 @@ class SkmtDataSet(Dataset):
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor()])
+            tr.ToTensor(),
+            self.MetaToTensor()]
+            )
 
         return composed_transforms(sample)
 
@@ -114,12 +128,14 @@ class SkmtDataSet(Dataset):
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor()])
+            tr.ToTensor(),
+            self.MetaToTensor()])
 
         return composed_transforms(sample)
 
         # get_ISPRS and encode_segmap generate label map
-
+    def MetaToTensor(self,sample):
+        torch.Tensor(sample['section'])
 
     @classmethod
     def encode_segmap(cls, mask):
