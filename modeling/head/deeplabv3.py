@@ -28,7 +28,6 @@ class DeepLab(nn.Module):
             NotImplementedError
         x = self.decoder(x, low_level_feat)
         x = F.interpolate(x, scale_factor=self.output_stride/4, mode='bilinear', align_corners=True)
-
         return x
 
     def freeze_bn(self):
@@ -51,7 +50,7 @@ class DeepLab(nn.Module):
 
 
 if __name__ == "__main__":
-    model = DeepLab(backbone='resnet50', BatchNorm=nn.BatchNorm2d,output_stride=16)
+    model = DeepLab(backbone='resnet50', BatchNorm=nn.BatchNorm2d,output_stride=16,num_classes=19)
     model.eval()
     input = torch.rand(1, 3, 512, 512)
     output = model(input)
