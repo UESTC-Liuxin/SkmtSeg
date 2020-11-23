@@ -6,12 +6,39 @@
 """
 from __future__ import print_function, division
 import os
+import torch
 from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
 from mypath import Path
 from torchvision import transforms
 from dataloader import custom_transforms as tr
+
+
+class ToTensor():
+    def __call__(self, sample):
+        # swap color axis because
+        # numpy image: H x W x C
+        # torch image: C X H X W
+        img = sample['image']
+        mask = sample['label']
+        section =sample['section']
+        
+        img = np.array(img).astype(np.float32).transpose((2, 0, 1))
+        mask = np.array(mask).astype(np.float32)
+        section=np.array(section).astype(np.long)
+
+        img = torch.from_numpy(img).float()
+        mask = torch.from_numpy(mask).long()
+        section=torch.from_numpy(section).long()
+
+        return {'image': img,
+                'label': mask,
+                'section':section}
+
+
+
+
 
 class SkmtDataSet(Dataset):
     """
@@ -86,13 +113,19 @@ class SkmtDataSet(Dataset):
 
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
-        sample = {'image': _img, 'label': _target}
+        _section = self._get_section(index)-1
 
+        sample = {'image': _img, 'label': _target,'section':_section}
         for split in self.split:
             if split == "train":
                 return self.transform_tr(sample)
             elif split == 'val':
                 return self.transform_val(sample)
+
+    def _get_section(self,index):
+        _name=self.images[index].split('/')[-1]
+        _section=_name.split('_')[0][-2]
+        return int(_section)
 
     def _make_img_gt_point_pair(self, index):
         _img = Image.open(self.images[index]).convert('RGB')
@@ -106,7 +139,7 @@ class SkmtDataSet(Dataset):
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor()])
+            ToTensor()])
 
         return composed_transforms(sample)
 
@@ -114,7 +147,7 @@ class SkmtDataSet(Dataset):
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor()])
+            ToTensor()])
 
         return composed_transforms(sample)
 

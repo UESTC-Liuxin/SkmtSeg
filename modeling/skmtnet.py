@@ -10,6 +10,7 @@
 
 import torch
 import torch.nn as nn
+from modeling.head.section_cls import SectionClass
 
 
 class SkmtNet(nn.Module):
@@ -20,17 +21,19 @@ class SkmtNet(nn.Module):
         self.trunk=trunk
         self.num_classes=num_classes
 
+        self.section_cls=SectionClass("resnet50",nn.BatchNorm2d,16,512,5)
+
     def forward(self, input):
         img = input['image']
         base_out=self.backbone(img)
-
+        section_out=self.section_cls(base_out)
         trunk_out = self.trunk(base_out)
         if(self.auxiliary):
             auxiliary_out=self.auxiliary(base_out)
         else:
             auxiliary_out=None
 
-        return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out}
+        return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out,'section_out':section_out}
 
 
 

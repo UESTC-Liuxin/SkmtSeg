@@ -68,6 +68,8 @@ class Tester(object):
         total_batches = len(self.dataloader)
 
         tloss = []
+        section_acc=0
+
         with torch.no_grad():
             pbar = tqdm(self.dataloader, ncols=100)
             for iter, batch in enumerate(pbar):
@@ -83,10 +85,19 @@ class Tester(object):
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
 
+
+                #计算section准确的个数
+                section_gt=np.array(batch['section'].cpu().detach().squeeze(0),dtype=np.uint8)
+                section_pred=np.argmax(np.array(output['section_out'].cpu().detach().squeeze(0),
+                                                dtype=np.uint8),axis=0)
+                section_acc+=(section_gt==section_pred).sum()
+                print((section_gt==section_pred).sum())
                 self.running_Metrics.update(gt, pred)
                 self.visualize(gt, pred, iter, writer,"test")
 
-        self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
+        writer.add_scalar('test/section_acc', section_acc / len(self.dataloader.dataset), epoch)
+        self.logger.info('======>epoch:{}---loss:{:.3f}---section_acc:{:.3f}'.
+                         format(epoch,sum(tloss)/len(tloss),section_acc / len(self.dataloader.dataset)))
         writer.add_scalar('test/loss_epoch', sum(tloss)/len(tloss), epoch)
         score, class_iou, class_acc,class_F1 = self.running_Metrics.get_scores()
         self.running_Metrics.reset()

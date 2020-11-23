@@ -48,6 +48,7 @@ class Loss(nn.Module):
         if(self.args.auxiliary is not None):
             self.loss_auxiliary = self.build_loss(mode=mode)
         self.loss_trunk = self.build_loss(mode=mode)
+        self.loss_section=nn.CrossEntropyLoss()
 
     def build_loss(self,mode):
         if mode == 'ce':
@@ -62,13 +63,17 @@ class Loss(nn.Module):
     def forward(self, preds,label):
 
         loss2 = self.loss_trunk(preds['trunk_out'], label['label'])
+        loss3 = self.loss_section(preds['section_out'],label['section'])
+
+        #TODO:查看section预测值
+        # print(preds['section_out'],label['section'])
         if(self.args.auxiliary is not None):
             loss1=self.loss_auxiliary(preds['auxiliary_out'],label['label'])
-            loss = (loss1 + loss2).mean()
+            loss = (loss1 + loss2+loss3).mean()
         else:
-            loss =loss2.mean()
-
-        return loss
+            loss =(loss2+loss3).mean()
+        #TODO:现在只做分类任务的训练
+        return loss3
 
 
 
