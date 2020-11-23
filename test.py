@@ -73,6 +73,9 @@ class Tester(object):
         with torch.no_grad():
             pbar = tqdm(self.dataloader, ncols=100)
             for iter, batch in enumerate(pbar):
+                name=batch[1]
+                batch=batch[0]
+
                 pbar.set_description("Testing Processing epoach:{}".format(epoch))
                 start_time = time.time()
 
@@ -83,15 +86,15 @@ class Tester(object):
                 tloss.append(loss.item())
 
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
-                pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
-
+                pred = np.asarray(np.argmax(output['trunk_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
 
                 #计算section准确的个数
                 section_gt=np.array(batch['section'].cpu().detach().squeeze(0),dtype=np.uint8)
-                section_pred=np.argmax(np.array(output['section_out'].cpu().detach().squeeze(0),
-                                                dtype=np.uint8),axis=0)
-                section_acc+=(section_gt==section_pred).sum()
-                print((section_gt==section_pred).sum())
+                section_pred=np.asarray(np.argmax(output['section_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+                # print(section_gt,output['section_out'].squeeze(0),name)
+
+
+                section_acc=(section_gt==section_pred).sum()+section_acc
                 self.running_Metrics.update(gt, pred)
                 self.visualize(gt, pred, iter, writer,"test")
 

@@ -120,7 +120,7 @@ class SkmtDataSet(Dataset):
             if split == "train":
                 return self.transform_tr(sample)
             elif split == 'val':
-                return self.transform_val(sample)
+                return self.transform_val(sample),self.images[index].split('/')[-1]
 
     def _get_section(self,index):
         _name=self.images[index].split('/')[-1]

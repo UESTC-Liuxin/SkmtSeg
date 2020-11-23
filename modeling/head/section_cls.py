@@ -22,7 +22,7 @@ class SectionClass(nn.Module):
         self.Conv=nn.Sequential(
             nn.Conv2d(in_channels=in_channel,out_channels=512,kernel_size=3,
                       padding=1),
-            BatchNorm(512),
+            # BatchNorm(512),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
@@ -39,7 +39,7 @@ class SectionClass(nn.Module):
 
     def forward(self, inputs):
         out=self.Conv(inputs[0])
-        out = out.view(inputs[0].size()[0], -1)
+        out = out.view(out.size()[0], -1)
         out=self.linear1(out)
         out=self.linear2(out)
 

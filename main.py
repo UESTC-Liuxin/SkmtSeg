@@ -46,7 +46,7 @@ def main(args,logger,summary):
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=False, **kwargs)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=True, **kwargs)
     test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
 
 

@@ -73,7 +73,7 @@ class Loss(nn.Module):
         else:
             loss =(loss2+loss3).mean()
         #TODO:现在只做分类任务的训练
-        return loss3
+        return loss
 
 
 
