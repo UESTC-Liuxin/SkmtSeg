@@ -10,7 +10,7 @@ Combine all the coco sub-data sets and follow the format of
 """
 import os
 from pycocotools.coco import COCO
-from tools.coco2voc import ann_to_segmap
+from tools.datasets_convert.coco2voc import ann_to_segmap
 #
 input_root='/home/liuxin/Documents/CV/dataset/SKMT/COCO'
 output_root='/home/liuxin/Documents/CV/dataset/SKMT/Seg'
