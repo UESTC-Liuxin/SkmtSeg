@@ -7,7 +7,6 @@
 @Created on: 2020/11/1 下午10:20
 """
 import os
-import time
 import random
 import numpy as np
 import argparse
@@ -23,8 +22,8 @@ from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
 
-from train import Trainer
-from test import Tester
+from tools.train import Trainer
+from tools.test import Tester
 
 from dataloader.skmt import SkmtDataSet
 from modeling import build_skmtnet
