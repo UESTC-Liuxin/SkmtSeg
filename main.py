@@ -12,12 +12,11 @@ import numpy as np
 import argparse
 import datetime
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from utils.loss import Loss
+from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
@@ -69,11 +68,28 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-    criterion = Loss(args,mode='focal')
+    CRITERION = dict(
+        auxiliary=dict(
+            losses=dict(
+                # ce=dict(reduction='mean'),
+                dice=dict(smooth=1, p=2, reduction='mean')
+            ),
+            loss_weights=[1]
+        ),
+        trunk=dict(
+            losses=dict(
+                # ce=dict(reduction='mean'),
+                dice=dict(smooth=1, p=2, reduction='mean')
+            ),
+            loss_weights=[1]
+        )
+    )
+    criterion = build_criterion(**CRITERION)
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
-        model=nn.DataParallel(model).cuda()
+        model=model.cuda()
         criterion=criterion.cuda()
 
 

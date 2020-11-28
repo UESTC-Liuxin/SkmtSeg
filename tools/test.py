@@ -76,7 +76,7 @@ class Tester(object):
 
                 batch = self.dict_to_cuda(batch)
                 output = self.model(batch)
-                loss = self.criterion(output, batch).cuda()
+                loss = self.criterion(output, batch['label']).cuda()
 
                 tloss.append(loss.item())
 

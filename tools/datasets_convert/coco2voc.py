@@ -49,6 +49,9 @@ def get_mask(coco,anns,file_name,prefix=None):
     seg_mask = np.zeros((img.size[1], img.size[0]), dtype=np.int)
     for ann in anns:
         mask = coco.annToMask(ann)
+        #TODO:屏蔽掉不需要的类
+        if(ann['category_id']>=SkmtDataSet.NUM_CLASSES):
+            ann['category_id']=0
         seg_mask[np.where(mask)]=ann['category_id']
         # return mask
     seg_map = Image.fromarray(seg_mask.astype('uint8')).convert('P')
