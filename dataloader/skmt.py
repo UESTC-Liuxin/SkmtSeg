@@ -71,6 +71,7 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
+                #print(_image)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)
@@ -118,8 +119,7 @@ class SkmtDataSet(Dataset):
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(),
-            self.MetaToTensor()]
+            tr.ToTensor()]
             )
 
         return composed_transforms(sample)
@@ -128,8 +128,7 @@ class SkmtDataSet(Dataset):
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(),
-            self.MetaToTensor()])
+            tr.ToTensor()])
 
         return composed_transforms(sample)
 

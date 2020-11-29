@@ -116,16 +116,16 @@ class ResNet(nn.Module):
     def forward(self, input):
         x = self.conv1(input)
         x = self.bn1(x)
-        x0= x = self.relu(x)
-        x1=x = self.maxpool(x)
+        x5= x = self.relu(x)
+        x4=x = self.maxpool(x)
 
-        x2=x = self.layer1(x)
-        x3=x = self.layer2(x)
-        x4=x = self.layer3(x)
-        x5= self.layer4(x)
+        x3=x = self.layer1(x)
+        x2=x = self.layer2(x)
+        x1=x = self.layer3(x)
+        x0= self.layer4(x)
 
 
-        return (x5,x4,x3,x2,x1,x0)
+        return (x0,x1,x2,x3,x4,x5)
 
     def get_1x_lr_params(self):
         modules = [self.backbone]
