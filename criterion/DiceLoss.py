@@ -98,7 +98,6 @@ class DiceLoss(nn.Module):
     def forward(self, predict, target):
         if (len(target.shape) < 4):
             target = make_one_hot(target, num_classes=predict.shape[1])  # get the num_classes of predict
-            print(target.shape)
         total_loss = 0
         predict = F.softmax(predict, dim=1)
         for i in range(target.shape[1]):

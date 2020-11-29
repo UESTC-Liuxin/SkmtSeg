@@ -71,15 +71,15 @@ def main(args,logger,summary):
     CRITERION = dict(
         auxiliary=dict(
             losses=dict(
-                # ce=dict(reduction='mean'),
-                dice=dict(smooth=1, p=2, reduction='mean')
+                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
         ),
         trunk=dict(
             losses=dict(
-                # ce=dict(reduction='mean'),
-                dice=dict(smooth=1, p=2, reduction='mean')
+                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
         )
@@ -106,7 +106,7 @@ def main(args,logger,summary):
 
     writer=summary.create_summary()
     for epoch in range(start_epoch,args.max_epochs):
-        trainer.train_one_epoch(epoch,writer)
+        # trainer.train_one_epoch(epoch,writer)
 
         if(epoch%args.show_val_interval==0):
             score, class_iou, class_acc,class_F1=tester.test_one_epoch(epoch,writer)

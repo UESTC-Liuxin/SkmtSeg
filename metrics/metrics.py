@@ -3,15 +3,21 @@
 
 import numpy as np
 
-np.seterr(divide='ignore', invalid='ignore')
-
 
 class runningScore(object):
     def __init__(self, n_classes):
         self.n_classes = n_classes
+        #初始化混淆矩阵
         self.confusion_matrix = np.zeros((n_classes, n_classes))
 
     def _fast_hist(self, label_true, label_pred, n_class):
+        """
+        计算当前测试图相对的混淆矩阵
+        :param label_true:
+        :param label_pred:
+        :param n_class:
+        :return:
+        """
         mask = (label_true >= 0) & (label_true < n_class)
         hist = np.bincount(
             n_class * label_true[mask].astype(int) + label_pred[mask],
@@ -20,6 +26,12 @@ class runningScore(object):
         return hist
 
     def update(self, label_trues, label_preds):
+        """
+
+        :param label_trues:
+        :param label_preds:
+        :return:
+        """
         for lt, lp in zip(label_trues, label_preds):
             self.confusion_matrix += self._fast_hist(
                 lt.flatten(), lp.flatten(), self.n_classes
@@ -36,68 +48,53 @@ class runningScore(object):
         # add evaluation matrix F1
         F1_score, mean_F1 = self.caluate_F1(hist)
         cls_F1 = dict(zip(range(self.n_classes), F1_score))
-        fwIoU = self.fwIoU(hist, self.n_classes)
-        acc = np.diag(hist).sum() / hist.sum()
-        cls_acc = np.diag(hist) / hist.sum(axis=1)
-        mean_acc = np.nanmean(cls_acc)
-        cls_acc = dict(zip(range(self.n_classes), cls_acc))
 
+        #计算PA
+        acc = np.diag(hist).sum() / hist.sum()
+        #计算单个类别的acc
+        acc_cls = np.diag(hist) / hist.sum(axis=1)
+        acc_cls = np.nanmean(acc_cls)
+
+        #计算单个类别的iou
         iu = np.diag(hist) / (hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist))
+        cls_iu = dict(zip(range(self.n_classes), iu))
+        #mIoU
         mean_iu = np.nanmean(iu)
+
+        #计算FwIou
         freq = hist.sum(axis=1) / hist.sum()
         fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
-        cls_iu = dict(zip(range(self.n_classes), iu))
 
-        # 5-class iou
-        target = [x for x in range(self.n_classes)]
-        hist_8 = hist[target]
-        hist_8 = hist_8[:, target]
-
-        iu_8 = np.diag(hist_8) / (hist_8.sum(axis=1) + hist_8.sum(axis=0) - np.diag(hist_8))
-        mean_iu_8 = np.nanmean(iu_8)
+        # 10-class iou
+        target = [x for x in range(1,self.n_classes)]
+        hist_10 = hist[target]
+        hist_10 = hist_10[:, target]
+        iu_10 = np.diag(hist_10) / (hist_10.sum(axis=1) + hist_10.sum(axis=0) - np.diag(hist_10))
+        mean_iu_10 = np.nanmean(iu_10)
 
         return (
             {
                 "Overall Acc : \t": acc,
-                "Mean Acc : \t": mean_acc,
+                "Mean Acc : \t": acc_cls,
                 "FreqW Acc : \t": fwavacc,
-                "Mean IoU(9) : \t": fwIoU,
-                "Mean IoU(8) : \t": mean_iu_8,
+                "Mean IoU(11) : \t": mean_iu,
+                "Mean IoU(10) : \t": mean_iu_10,
                 "Mean F1 : \t": mean_F1,
-                # "F1 score : \t": F1_score,
             },
-            cls_iu, cls_acc, cls_F1
+            cls_iu, cls_F1
         )
 
     def caluate_F1(self, confusion_matrix):
-        import pandas as pd
         F1_score = []
-        for i in range(self.n_classes):
+        for i in range(self.n_classes - 1):
             p = confusion_matrix[i, i] / sum(confusion_matrix[:, i])
             R = confusion_matrix[i, i] / sum(confusion_matrix[i, :])
             F1 = 2 / (1 / p + 1 / R)
             F1_score.append(F1)
         mean_F1 = np.asarray(F1_score).mean()
-
+        # print('every class F1_score: {}. '.format(F1_score))
+        # print('mean F1: {}. '.format(mean_F1))
         return F1_score, mean_F1
-
-    def fwIoU(self, confusion_matrix, num_classes):
-        sum_sum_pij = 0
-        fwIoU = 0
-        for i in range(num_classes):  # for every class
-            IoU = 0
-            pii = confusion_matrix[i][i]
-            sum_pij = 0
-            for j in range(num_classes):
-                sum_pij += confusion_matrix[i][j]
-            sum_pji = 0
-            for j in range(num_classes):
-                sum_pji += confusion_matrix[j][i]
-            IoU = pii / (sum_pij + sum_pji - pii)
-            fwIoU += IoU * sum_pij
-            sum_sum_pij += sum_pij
-        fwIoU = fwIoU / sum_sum_pij
-        return fwIoU
 
     def reset(self):
         self.confusion_matrix = np.zeros((self.n_classes, self.n_classes))
