@@ -14,9 +14,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from metrics.metrics import runningScore, averageMeter
+from metrics.metrics import Evaluator
 from tqdm import tqdm
-
+from prettytable import PrettyTable
 
 
 class Tester(object):
@@ -40,7 +40,8 @@ class Tester(object):
         self.summary=summary
         self.criterion=criterion
 
-        self.running_Metrics = runningScore(args.num_classes)
+        # Define Evaluator
+        self.evaluator = Evaluator(args.num_classes)
 
     def dict_to_cuda(self,tensors):
         cuda_tensors={}
@@ -66,6 +67,7 @@ class Tester(object):
         """
         self.model.eval()
         total_batches = len(self.dataloader)
+        self.evaluator.reset()
 
         tloss = []
         with torch.no_grad():
@@ -76,24 +78,45 @@ class Tester(object):
 
                 batch = self.dict_to_cuda(batch)
                 output = self.model(batch)
-                loss = self.criterion(output, batch).cuda()
+                loss = self.criterion(output, batch['label']).cuda()
 
                 tloss.append(loss.item())
 
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
 
-                self.running_Metrics.update(gt, pred)
                 self.visualize(gt, pred, iter, writer,"test")
+                self.evaluator.add_batch(gt, pred)
+
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
         writer.add_scalar('test/loss_epoch', sum(tloss)/len(tloss), epoch)
-        score, class_iou, class_acc,class_F1 = self.running_Metrics.get_scores()
-        self.running_Metrics.reset()
+
+        #add a tabel
+        tb_overall = PrettyTable()
+        tb_cls  =PrettyTable()
+        # Fast test during the training
+        Acc = np.around(self.evaluator.Pixel_Accuracy(),decimals=3)
+        mAcc = np.around(self.evaluator.Pixel_Accuracy_Class(),decimals=3)
+        mIoU = np.around(self.evaluator.Mean_Intersection_over_Union(),decimals=3)
+        FWIoU = np.around(self.evaluator.Frequency_Weighted_Intersection_over_Union(),decimals=3)
+        acc_cls = np.around(self.evaluator.Acc_Class(),decimals=3)
+        iou_cls =  np.around(self.evaluator.IoU_Class(),decimals=3)
+
+        #Print info
+        tb_overall.field_names = ["Acc", "mAcc", "mIoU", "FWIoU"]
+        tb_overall.add_row([Acc, mAcc, mIoU, FWIoU])
+
+        tb_cls.field_names =['Index']+list(self.dataloader.dataset.CLASSES[:self.args.num_classes])
+        tb_cls.add_row(['acc']+list(acc_cls))
+        tb_cls.add_row(['iou'] + list(iou_cls))
+        self.logger.info(tb_overall)
+        self.logger.info(tb_cls)
 
 
+        return Acc,mAcc,mIoU,FWIoU
 
-        return score, class_iou,class_acc, class_F1
+
 
 
 

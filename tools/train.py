@@ -11,7 +11,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from metrics.metrics import runningScore, averageMeter
 from tqdm import tqdm
 
 class Trainer(object):
@@ -92,10 +91,8 @@ class Trainer(object):
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
             output=self.model(batch)
-            #print(output)
-            #g=make_dot(output['trunk_out'])
-            #g.render('deep_danet',directory='/home/cyl/SkmtSeg',view=False)
-            loss = self.criterion(output,batch).cuda()
+
+            loss = self.criterion(output,batch['label'])
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()

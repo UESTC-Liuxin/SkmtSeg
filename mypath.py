@@ -11,7 +11,7 @@ class Path(object):
     @staticmethod
     def db_root_dir(dataset):
         if dataset == 'pascal':
-            return '/media/Program/CV/dataset/VOCdevkit/Seg/skmt5/'  # folder that contains VOCdevkit/.
+            return '/media/Program/CV/dataset/VOCdevkit/'  # folder that contains VOCdevkit/.
         elif dataset == 'skmt':
             return 'data/SKMT/Seg/'
         elif dataset == 'sbd':

@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+
+#TODO：未正式启用
 class SELoss(nn.Module):
     def __init__(self, num_classes=6):
         super(SELoss, self).__init__()

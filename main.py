@@ -12,12 +12,11 @@ import numpy as np
 import argparse
 import datetime
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from utils.loss import Loss
+from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
@@ -69,19 +68,34 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-    criterion = Loss(args)
+
+    CRITERION = dict(
+        auxiliary=dict(
+            losses=dict(
+                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                # dice=dict(smooth=1, p=2, reduction='mean')
+            ),
+            loss_weights=[1]
+        ),
+        trunk=dict(
+            losses=dict(
+                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                # dice=dict(smooth=1, p=2, reduction='mean')
+            ),
+            loss_weights=[1]
+        )
+    )
+    criterion = build_criterion(**CRITERION)
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
-        model=nn.DataParallel(model).cuda()
+        model=model.cuda()
         criterion=criterion.cuda()
 
 
     start_epoch = 0
-    best_epoch = 0.
-    best_overall = 0.
     best_mIoU = 0.
-    best_F1 = 0.
 
     trainer=Trainer(args=args,dataloader=train_loader,model=model,
                     optimizer=optimizer,criterion=criterion,logger=logger,summary=summary)
@@ -93,53 +107,27 @@ def main(args,logger,summary):
         trainer.train_one_epoch(epoch,writer)
 
         if(epoch%args.show_val_interval==0):
-            score, class_iou, class_acc,class_F1=tester.test_one_epoch(epoch,writer)
+            Acc,mAcc,mIoU,FWIoU=tester.test_one_epoch(epoch,writer)
 
-            logger.info('======>Now print overall info:')
-            for k, v in score.items():
-                logger.info('======>{0:^18} {1:^10}'.format(k, v))
-
-            logger.info('======>Now print class acc')
-            for k, v in class_acc.items():
-                print('{}: {:.5f}'.format(k, v))
-                logger.info('======>{0:^18} {1:^10}'.format(k, v))
-
-
-            logger.info('======>Now print class iou')
-            for k, v in class_iou.items():
-                print('{}: {:.5f}'.format(k, v))
-                logger.info('======>{0:^18} {1:^10}'.format(k, v))
-
-            logger.info('======>Now print class_F1')
-            for k, v in class_F1.items():
-                logger.info('======>{0:^18} {1:^10}'.format(k, v))
-
-            if score["Mean IoU(8) : \t"] > best_mIoU:
-                best_mIoU = score["Mean IoU(8) : \t"]
-
-            if score["Overall Acc : \t"] > best_overall:
-                best_overall = score["Overall Acc : \t"]
-                # save model in best overall Acc
+            new_pred = mIoU
+            if new_pred > best_mIoU:
+                best_mIoU = new_pred
+                # save the model
                 model_file_name = args.savedir + '/best_model.pth'
-                torch.save(model.state_dict(), model_file_name)
-                best_epoch = epoch
+                state = {"epoch": epoch + 1,
+                         "model": model.state_dict(),
+                         "optimizer": optimizer.state_dict(),
+                         "criterion": criterion.state_dict()
+                         }
+                torch.save(state, model_file_name)
 
-            if score["Mean F1 : \t"] > best_F1:
-                best_F1 = score["Mean F1 : \t"]
-
-            logger.info("======>best mean IoU:{}".format(best_mIoU))
-            logger.info("======>best overall : {}".format(best_overall))
-            logger.info("======>best F1: {}".format(best_F1))
-            logger.info("======>best epoch: {}".format(best_epoch))
-
-            # save the model
-            model_file_name = args.savedir + '/model.pth'
-            state = {"epoch": epoch + 1, "model": model.state_dict()}
-
-            logger.info('======> Now begining to save model.')
-            torch.save(state, model_file_name)
-            logger.info('======> Save done.')
-
+    model_file_name = args.savedir + '/resume_model.pth'
+    state = {"epoch": epoch + 1,
+             "model": model.state_dict(),
+             "optimizer": optimizer.state_dict(),
+             "criterion": criterion.state_dict()
+             }
+    torch.save(state, model_file_name)
 
 
 if __name__ == '__main__':
