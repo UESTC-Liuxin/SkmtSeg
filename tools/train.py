@@ -11,7 +11,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from metrics.metrics import runningScore, averageMeter
 from tqdm import tqdm
 
 class Trainer(object):
