@@ -4,11 +4,11 @@ GPUS="0"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --trunk_head "danet"\
               --auxiliary "fcn"\
-              --batch_size 4   \
+              --batch_size 2   \
               --crop_size 512 \
               --image_size 512 \
               --max_epochs 200 \
-              --num_classes 19 \
+              --num_classes 11 \
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \

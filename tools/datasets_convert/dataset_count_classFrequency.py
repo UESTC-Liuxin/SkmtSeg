@@ -12,7 +12,7 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
-dataset_root = '../data/SKMT/Seg'
+dataset_root = '/home/liuxin/Documents/CV/Project/SkmtSeg/data/SKMT/Seg'
 images_path = os.path.join(dataset_root, 'SegmentationClass')
 
 

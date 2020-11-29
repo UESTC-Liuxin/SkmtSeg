@@ -26,14 +26,14 @@ class SkmtDataSet(Dataset):
 
     PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
                [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],
-               [192, 0, 0], [64, 128, 0], [192, 128, 0], [64, 0, 128],
-               [192, 0, 128], [64, 128, 128], [192, 128, 128], [0, 64, 0],[255,255,255],[255,255,255]])
+               [192, 0, 0], [64, 128, 0]])
 
     CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
-                          0.0085,0.0092,0.0014,0.0073,0.0012,0.0213,
-                          0,0,0,0,0,0,0,0)
+                          0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
 
-    NUM_CLASSES = len(CLASSES)
+    #TODO:取消未出现的类
+    # NUM_CLASSES = len(CLASSES)
+    NUM_CLASSES=11
 
     def __init__(self,
                  args,
@@ -103,7 +103,7 @@ class SkmtDataSet(Dataset):
         _name_split=_name.split('.')
         image_name_split=_name_split[-1].split('_')
         _section =image_name_split[0][-2]
-        print(_section)
+
 
 
     def _make_img_gt_point_pair(self, index):
@@ -118,8 +118,7 @@ class SkmtDataSet(Dataset):
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(),
-            self.MetaToTensor()]
+            tr.ToTensor()]
             )
 
         return composed_transforms(sample)
@@ -128,15 +127,11 @@ class SkmtDataSet(Dataset):
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(),
-            self.MetaToTensor()])
+            tr.ToTensor()])
 
         return composed_transforms(sample)
 
-        # get_ISPRS and encode_segmap generate label map
-    def MetaToTensor(self,sample):
-        torch.Tensor(sample['section'])
-
+        # get_ISPRS and encode_segmap generate label map[
     @classmethod
     def encode_segmap(cls, mask):
         """Encode segmentation label images as pascal classes
