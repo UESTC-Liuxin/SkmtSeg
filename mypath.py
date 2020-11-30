@@ -13,7 +13,7 @@ class Path(object):
         if dataset == 'pascal':
             return '/media/Program/CV/dataset/VOCdevkit/'  # folder that contains VOCdevkit/.
         elif dataset == 'skmt':
-            return 'data/SKMT/Seg/'
+            return 'data/SKMT/SegSplit/'
         elif dataset == 'sbd':
             return '/path/to/datasets/benchmark_RELEASE/'  # folder that contains dataset/.
         elif dataset == 'cityscapes':

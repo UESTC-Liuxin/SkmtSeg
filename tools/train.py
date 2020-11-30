@@ -117,10 +117,13 @@ class Trainer(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-
         pred=self.dataloader.dataset.decode_segmap(pred)
-        self.summary.visualize_image(writer,title+'/gt',gt,epoch)
-        self.summary.visualize_image(writer, title+'/pred', pred, epoch)
+        gt = np.array(gt).astype(np.float32).transpose((2, 0, 1))
+        gt = torch.from_numpy(gt).type(torch.FloatTensor)
+        pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
+        pred = torch.from_numpy(pred).type(torch.FloatTensor)
+        img=torch.stack([gt,pred])
+        self.summary.visualize_image(writer,title,img,epoch)
 
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题

@@ -85,9 +85,10 @@ class Tester(object):
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
 
-                self.visualize(gt, pred, iter, writer,"test")
+
                 self.evaluator.add_batch(gt, pred)
 
+                self.visualize(gt, pred, iter, writer, "test")
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
         writer.add_scalar('test/loss_epoch', sum(tloss)/len(tloss), epoch)
@@ -104,8 +105,8 @@ class Tester(object):
         iou_cls =  np.around(self.evaluator.IoU_Class(),decimals=3)
 
         #Print info
-        tb_overall.field_names = ["Acc", "mAcc", "mIoU", "FWIoU"]
-        tb_overall.add_row([Acc, mAcc, mIoU, FWIoU])
+        tb_overall.field_names = ["epoch","Acc", "mAcc", "mIoU", "FWIoU"]
+        tb_overall.add_row([epoch,Acc, mAcc, mIoU, FWIoU])
 
         tb_cls.field_names =['Index']+list(self.dataloader.dataset.CLASSES[:self.args.num_classes])
         tb_cls.add_row(['acc']+list(acc_cls))
@@ -114,7 +115,7 @@ class Tester(object):
         self.logger.info(tb_cls)
 
 
-        return Acc,mAcc,mIoU,FWIoU
+        return Acc,mAcc,mIoU,FWIoU,tb_overall
 
 
 
@@ -129,10 +130,13 @@ class Tester(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-
         pred=self.dataloader.dataset.decode_segmap(pred)
-        self.summary.visualize_image(writer,title+'/gt',gt,epoch)
-        self.summary.visualize_image(writer, title+'/pred', pred, epoch)
+        gt = np.array(gt).astype(np.float32).transpose((2, 0, 1))
+        gt = torch.from_numpy(gt).type(torch.FloatTensor)
+        pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
+        pred = torch.from_numpy(pred).type(torch.FloatTensor)
+        img=torch.stack([gt,pred])
+        self.summary.visualize_image(writer,title,img,epoch)
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题
 def visualize(img,tag):

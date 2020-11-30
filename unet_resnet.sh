@@ -3,7 +3,7 @@
 
 GPUS="0"
 export CUDA_VISIBLE_DEVICES=$GPUS
-python main.py --batch_size 2   \
+python main.py --batch_size 4   \
               --auxiliary "fcn"  \
               --trunk_head "unet" \
               --crop_size 512 \
