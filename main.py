@@ -44,7 +44,7 @@ def main(args,logger,summary):
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=False, **kwargs)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=True, **kwargs)
     test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
 
 
@@ -72,14 +72,14 @@ def main(args,logger,summary):
     CRITERION = dict(
         auxiliary=dict(
             losses=dict(
-                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
         ),
         trunk=dict(
             losses=dict(
-                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+                ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
