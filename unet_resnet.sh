@@ -1,7 +1,7 @@
 
 #!/usr/bin/env bash
 
-GPUS="0"
+GPUS="1"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --batch_size 4   \
               --auxiliary "fcn"  \
@@ -11,8 +11,9 @@ python main.py --batch_size 4   \
               --max_epochs 200 \
               --num_classes 11 \
               --lr 0.004  \
+              --weight_decay 5e-4 \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/deeplab_resnet_dws_fcn/" \
+              --savedir "./runs/deeplab_danet/" \
               --gpus $GPUS
 

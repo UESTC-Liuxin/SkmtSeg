@@ -1,7 +1,7 @@
 
 #!/usr/bin/env bash
 
-GPUS="0"
+GPUS="1"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --trunk_head "deeplab_danet"\
               --auxiliary "fcn"\

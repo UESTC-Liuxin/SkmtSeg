@@ -149,7 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_epochs', type=int, help='the number of epochs: default 100 ')
     parser.add_argument('--num_classes', type=int)
     parser.add_argument('--lr', type=float)
-    parser.add_argument('--weight_decay', default=4e-5, type=float)
+    parser.add_argument('--weight_decay', default=5e-4, type=float)
     parser.add_argument('--workers', type=int, default=4, help=" the number of parallel threads")
     parser.add_argument('--show_interval', default=50, type=int)
     parser.add_argument('--show_val_interval', default=1, type=int)
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # 设置运行id
-    run_id = 'lr{}_bz{}'.format(args.lr, args.batch_size) \
+    run_id = 'lr{}_bz{}_wd{}'.format(args.lr, args.batch_size,args.weight_decay) \
              + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')  # 现在
 
     args.savedir = os.path.join(args.savedir, str(run_id))
