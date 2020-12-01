@@ -8,10 +8,10 @@ python main.py --trunk_head "deeplab_danet"\
               --batch_size 4   \
               --crop_size 512 \
               --image_size 512 \
-              --max_epochs 200 \
+              --max_epochs 100 \
               --num_classes 11 \
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/deeplab_danet/" \
+              --savedir "./runs/deeplab_danet_focal/" \
               --gpus $GPUS

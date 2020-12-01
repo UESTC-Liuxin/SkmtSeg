@@ -8,10 +8,18 @@ class Evaluator(object):
 
 
     def Pixel_Accuracy(self):
+        """
+        caculate PA(Overall Acc)
+        :return:
+        """
         Acc = np.diag(self.confusion_matrix).sum() / self.confusion_matrix.sum()
         return Acc
 
     def Pixel_Accuracy_Class(self):
+        """
+        caculate mPA
+        :return:
+        """
         Acc = np.diag(self.confusion_matrix) / self.confusion_matrix.sum(axis=1)
         Acc = np.nanmean(Acc)
         return Acc
