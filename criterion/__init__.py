@@ -47,8 +47,6 @@ def build_criterion(auxiliary=None,trunk=None):
     assert len(trunk_losses)==len(trunk_loss_weights)
     trunk_compose=ComposeLoss(trunk_losses,trunk_loss_weights)
 
-
-
     if(auxiliary is not None):
         auxiliary_losses=[]
         for mode,kwargs in auxiliary['losses'].items():

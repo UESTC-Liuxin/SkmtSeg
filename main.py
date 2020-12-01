@@ -68,23 +68,34 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-
-    CRITERION = dict(
-        auxiliary=dict(
-            losses=dict(
-                ce=dict(reduction='mean')
-                # dice=dict(smooth=1, p=2, reduction='mean')
+    if(args.auxiliary is not None):
+        CRITERION = dict(
+            auxiliary=dict(
+                losses=dict(
+                    ce=dict(reduction='mean')
+                    # dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[1]
             ),
-            loss_weights=[1]
-        ),
-        trunk=dict(
-            losses=dict(
-                ce=dict(reduction='mean')
-                # dice=dict(smooth=1, p=2, reduction='mean')
-            ),
-            loss_weights=[1]
+            trunk=dict(
+                losses=dict(
+                    ce=dict(reduction='mean')
+                    # dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[1]
+            )
         )
-    )
+    else:
+        CRITERION = dict(
+            auxiliary=None,
+            trunk=dict(
+                losses=dict(
+                    ce=dict(reduction='mean')
+                    # dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[1]
+            )
+        )
     criterion = build_criterion(**CRITERION)
 
     if torch.cuda.is_available():
