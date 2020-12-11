@@ -50,10 +50,17 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
 
 
 if __name__ =="__main__":
-    input =torch.Tensor(2,3,512,512).cuda()
-    model=build_skmtnet('resnet50',auxiliary_head='fcn',trunk_head='deeplab',
-                        num_classes=17)
-    model=model.cuda()
-    out=model({'image':input})
+    i=0
+    input = torch.Tensor(2, 3, 512, 512).cuda()
+    model = build_skmtnet('resnet50', auxiliary_head='fcn', trunk_head='MultiScaleAttention',
+                          num_classes=11)
+    model = model.cuda()
+    while True:
+        with torch.no_grad():
+            model.eval()
+            out=model({'image':input})
+            print(i)
+            i+=1
+
 
 

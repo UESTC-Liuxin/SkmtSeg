@@ -15,6 +15,15 @@ class UNet(nn.Module):
         self.n_classes = num_classes
         self.conv1 = nn.Conv2d(2048, 512, 1, bias=False)
         self.output_stride=output_stride
+        if output_stride == 16:
+            inputstrides = [1024, 512, 128, 64]
+            dilations = [1, 1, 1, 2]
+        elif output_stride == 8:
+            strides = [1, 2, 1, 1]
+            dilations = [1, 1, 2, 4]
+        else:
+            raise NotImplementedError
+
         self.up1 = Up(1024, 512 //2,BatchNorm)
         self.up2 = Up(512, 256 // 4,BatchNorm)
         self.up3 = Up(128, 64,BatchNorm)

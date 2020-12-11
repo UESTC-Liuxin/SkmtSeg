@@ -6,7 +6,7 @@
 @contact: xinliu1996@163.com
 @Created on: 2020/11/10 上午10:42
 """
-from modeling.head import fcn,deeplabv3,danet,deeplab_danet,dran,deeplabdran,unet,DLinkNet
+from modeling.head import fcn,deeplabv3,danet,deeplab_danet,dran,deeplabdran,unet,DLinkNet,MultiScaleAttention
 from modeling.head import auxiliary_fcn
 
 def build_head(head,backbone,BatchNorm, output_stride, num_classes):
@@ -27,6 +27,9 @@ def build_head(head,backbone,BatchNorm, output_stride, num_classes):
         return deeplabdran.DeepDran(backbone, BatchNorm, output_stride, num_classes)
     elif (head == "DLinkNet"):
         return DLinkNet.DLinkNet(backbone, BatchNorm, output_stride, num_classes)
+    elif (head == "MultiScaleAttention"):
+        return MultiScaleAttention.MultiScaleAttention(backbone, BatchNorm, output_stride, num_classes)
+
     else:
         raise NotImplementedError
 
