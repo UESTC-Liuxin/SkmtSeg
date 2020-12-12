@@ -18,17 +18,17 @@ class MultiScaleAttention(nn.Module):
             in_channels=2048
         else:
             raise NotImplementedError
-        self.down4 = nn.Sequential(nn.Conv2d(in_channels, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
-        self.down3 = nn.Sequential(nn.Conv2d(in_channels//2, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
-        self.down2 = nn.Sequential(nn.Conv2d(in_channels//4, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
+        # self.down4 = nn.Sequential(nn.Conv2d(in_channels, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
+        # self.down3 = nn.Sequential(nn.Conv2d(in_channels//2, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
+        # self.down2 = nn.Sequential(nn.Conv2d(in_channels//4, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
         self.down1 = nn.Sequential(nn.Conv2d(in_channels//8, 64, kernel_size=1), nn.BatchNorm2d(64), nn.PReLU())
 
         self.fuse1 = MultiConv(256, 64)
 
-        self.head1 = DANetHead(128, num_classes, BatchNorm)
-        self.head2 = DANetHead(128, num_classes, BatchNorm)
-        self.head3 = DANetHead(128, num_classes, BatchNorm)
-        self.head4 = DANetHead(128, num_classes, BatchNorm)
+        self.head1 = DANetHead(in_channels, 64, BatchNorm)
+        self.head2 = DANetHead(in_channels//2, 64, BatchNorm)
+        self.head3 = DANetHead(in_channels//4, 64, BatchNorm)
+        self.head4 = DANetHead(in_channels//8, 64, BatchNorm)
 
         self.output_stride = output_stride
 
@@ -37,17 +37,21 @@ class MultiScaleAttention(nn.Module):
             self.freeze_bn()
 
     def forward(self, inputs):
-
-        down4 = F.upsample(self.down4(inputs[0]), size=inputs[3].size()[2:], mode='bilinear')
-        down3 = F.upsample(self.down3(inputs[1]), size=inputs[3].size()[2:], mode='bilinear')
-        down2 = F.upsample(self.down2(inputs[2]), size=inputs[3].size()[2:], mode='bilinear')
+        inputs1 = self.head1(inputs[0])
+        inputs2 = self.head2(inputs[1])
+        inputs3 = self.head3(inputs[2])
+        #inputs4 = inputs[3]
+        down4 = F.upsample(inputs1, size=inputs[3].size()[2:], mode='bilinear')
+        down3 = F.upsample(inputs2, size=inputs[3].size()[2:], mode='bilinear')
+        down2 = F.upsample(inputs3, size=inputs[3].size()[2:], mode='bilinear')
         down1 = self.down1(inputs[3])
+
         fuse1 = self.fuse1(torch.cat((down4, down3, down2, down1), 1))
         fuse1 = self.conv8(fuse1)
-        #attention4 = self.head1(torch.cat((down4, fuse1), dim=1))
-        # attention3 = self.head2(torch.cat((down4, fuse1), dim=1))
-        # attention2 = self.head3(torch.cat((down4, fuse1), dim=1))
-        # attention1 = self.head4(torch.cat((down4, fuse1), dim=1))
+        #attention4 = self.head4(torch.cat((down4, fuse1), dim=1))
+        # attention3 = self.head3(torch.cat((down4, fuse1), dim=1))
+        # attention2 = self.head2(torch.cat((down4, fuse1), dim=1))
+        # attention1 = self.head1(torch.cat((down4, fuse1), dim=1))
         #
         # feat_sum = attention4 + attention3+ attention2+ attention1
 
