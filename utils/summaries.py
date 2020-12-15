@@ -21,10 +21,5 @@ class TensorboardSummary(object):
     #     writer.add_image('Groundtruth label', grid_image, global_step)
 
     def visualize_image(self, writer, tag,img,global_step):
-
-
-        img = np.array(img).astype(np.float32).transpose((2, 0, 1))
-        img = torch.from_numpy(img).type(torch.FloatTensor)
-
-        grid_image = make_grid(img, 3, normalize=False, range=(0, 255))
+        grid_image = make_grid(img,normalize=False, range=(0, 255))
         writer.add_image(tag, grid_image, global_step)

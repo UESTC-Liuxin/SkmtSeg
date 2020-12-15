@@ -10,5 +10,5 @@ python /media/Program/CV/Project/SkmtSeg/tools/convert_datasets/random_split.py
 
 #上传
 
-scp -r /media/Program/CV/dataset/SKMT/Seg liuxin@192.168.1.110:/home/liuxin/Documents/SkmtSeg/data/SKMT/
+scp -r /media/Program/CV/dataset/SKMT/Seg liuxin@192.168.1.132:/home/liuxin/Documents/SkmtSeg/data/SKMT/
 

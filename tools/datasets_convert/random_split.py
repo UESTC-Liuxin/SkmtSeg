@@ -143,7 +143,6 @@ class SplitImageSetsByDate(object):
         """
         file = open(dist_file, 'wb')
         for file_name in file_list:
-            file_name=file_name.replace('.png','')
             file.write((file_name + '\n').encode())
         file.close()
 
