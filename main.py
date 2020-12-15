@@ -25,6 +25,7 @@ from tools.train import Trainer
 from tools.test import Tester
 
 from dataloader.skmt import SkmtDataSet
+from dataloader.simplers import CustomRandomSampler, BatchSampler
 from modeling import build_skmtnet
 
 def main(args,logger,summary):
@@ -44,7 +45,9 @@ def main(args,logger,summary):
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=False, **kwargs)
+    sampler=CustomRandomSampler(train_set,batch_size=args.batch_size)
+    batch_sampler=BatchSampler(sampler)
+    train_loader = DataLoader(train_set, batch_sampler=batch_sampler, **kwargs)
     test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
 
 
@@ -69,13 +72,13 @@ def main(args,logger,summary):
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
     CRITERION = dict(
-        auxiliary=dict(
-            losses=dict(
-                ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-                # dice=dict(smooth=1, p=2, reduction='mean')
-            ),
-            loss_weights=[1]
-        ),
+        # auxiliary=dict(
+        #     losses=dict(
+        #         ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+        #         # dice=dict(smooth=1, p=2, reduction='mean')
+        #     ),
+        #     loss_weights=[1]
+        # ),
         trunk=dict(
             losses=dict(
                 ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
@@ -105,20 +108,27 @@ def main(args,logger,summary):
     for epoch in range(start_epoch,args.max_epochs):
         trainer.train_one_epoch(epoch,writer)
 
-        if(epoch%args.show_val_interval==0):
-            Acc,mAcc,mIoU,FWIoU=tester.test_one_epoch(epoch,writer)
+        for epoch in range(start_epoch, args.max_epochs):
+            trainer.train_one_epoch(epoch, writer)
 
-            new_pred = mIoU
-            if new_pred > best_mIoU:
-                best_mIoU = new_pred
-                # save the model
-                model_file_name = args.savedir + '/best_model.pth'
-                state = {"epoch": epoch + 1,
-                         "model": model.state_dict(),
-                         "optimizer": optimizer.state_dict(),
-                         "criterion": criterion.state_dict()
-                         }
-                torch.save(state, model_file_name)
+            if (epoch % 1 == 0):
+                Acc, mAcc, mIoU, FWIoU, tb_overall = tester.test_one_epoch(epoch, writer)
+
+                new_pred = mIoU
+                if new_pred > best_mIoU:
+                    best_mIoU = new_pred
+                    best_overall = tb_overall
+                    # save the model
+                    model_file_name = args.savedir + '/best_model.pth'
+                    state = {"epoch": epoch + 1,
+                             "model": model.state_dict(),
+                             "optimizer": optimizer.state_dict(),
+                             "criterion": criterion.state_dict()
+                             }
+                    torch.save(state, model_file_name)
+                logger.info("======>best epoch:")
+                logger.info(best_overall)
+
 
     model_file_name = args.savedir + '/resume_model.pth'
     state = {"epoch": epoch + 1,

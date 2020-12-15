@@ -89,20 +89,22 @@ class SkmtDataSet(Dataset):
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
         _section=self.get_section(index)
-
         sample = {'image': _img, 'label': _target,'section':_section}
 
         for split in self.split:
             if split == "train":
-                return self.transform_tr(sample)
+                for key,value in self.transform_tr(sample).items():
+                    sample[key]=value
+                return sample
             elif split == 'val':
-                return self.transform_val(sample)
+                for key,value in self.transform_val(sample).items():
+                    sample[key]=value
+                return sample
 
     def get_section(self,index):
-        _name=self.images[index]
-        _name_split=_name.split('.')
-        image_name_split=_name_split[-1].split('_')
-        _section =image_name_split[0][-2]
+        _name=self.images[index].split('/')[-1]
+        _section=_name.split('_')[0][-2]
+        return int(_section)
 
 
 
@@ -132,6 +134,22 @@ class SkmtDataSet(Dataset):
         return composed_transforms(sample)
 
         # get_ISPRS and encode_segmap generate label map[
+
+
+    def count_section(self):
+        """count the section num
+        :param img_list:
+        :return:
+        """
+        table={}
+        for i in range(len(self.images)):
+            _section=self.get_section(i)
+            if(_section not in table.keys()):
+                table[_section]=0
+            table[_section]=table[_section]+1
+        return table
+
+
     @classmethod
     def encode_segmap(cls, mask):
         """Encode segmentation label images as pascal classes

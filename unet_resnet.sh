@@ -1,10 +1,9 @@
 
 #!/usr/bin/env bash
 
-GPUS="0"
+GPUS="1"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --batch_size 2   \
-              --auxiliary "fcn"  \
               --trunk_head "unet" \
               --crop_size 512 \
               --image_size 512 \

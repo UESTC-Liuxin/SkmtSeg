@@ -4,8 +4,7 @@
 GPUS="0"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --trunk_head "deeplab_danet"\
-              --auxiliary "fcn"\
-              --batch_size 2   \
+              --batch_size 4   \
               --crop_size 512 \
               --image_size 512 \
               --max_epochs 200 \

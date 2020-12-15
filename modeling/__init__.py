@@ -30,7 +30,7 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
     if sync_bn:
         BatchNorm=SynchronizedBatchNorm2d
     else:
-        BatchNorm=nn.BatchNorm2d
+        BatchNorm=TempBatchNorm
     #选择backbone
     backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
 
@@ -41,12 +41,31 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
         auxiliary_head_model=None
 
     #选择trunk head
-    trunk_head_model = build_head(trunk_head,backbone,BatchNorm,output_stride=output_stride,num_classes=num_classes)
+    trunk_head_model1 = build_head(trunk_head,backbone,BatchNorm,output_stride=output_stride,num_classes=num_classes)
+    trunk_head_model2 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
+                                   num_classes=num_classes)
+    trunk_head_model3 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
+                                   num_classes=num_classes)
+    trunk_head_model4 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
+                                   num_classes=num_classes)
+    trunk_head_model5 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
+                                   num_classes=num_classes)
+
     #集成模型
-    return SkmtNet(backbone_model,auxiliary_head_model,trunk_head_model,num_classes)
+    return SkmtNet(backbone_model,auxiliary_head_model,
+                   trunk_head_model1,
+                   trunk_head_model2,
+                   trunk_head_model3,
+                   trunk_head_model4,
+                   trunk_head_model5,
+                   num_classes)
 
+class TempBatchNorm(nn.Module):
+    def __init__(self,temp):
+        super(TempBatchNorm,self).__init__()
 
-
+    def forward(self, input):
+        return input
 
 
 if __name__ =="__main__":
