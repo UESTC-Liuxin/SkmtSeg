@@ -52,10 +52,20 @@ class Trainer(object):
         """
         poly learning stategyt
         lr = baselr*(1-iter/max_iter)^power
-        """
+
         cur_iter = epoch * perEpoch_iter + curEpoch_iter
         max_iter = max_epoch * perEpoch_iter
         lr = baselr * pow((1 - 1.0 * cur_iter / max_iter), 0.9)
+        """
+        if epoch==5:
+            lr=3*1e-3
+        elif epoch== 10:
+            lr=1*1e-3
+        elif epoch == 15:
+            lr = 5*1e-4
+        else:
+            lr = 1e-4
+
 
         return lr
 

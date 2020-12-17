@@ -12,8 +12,8 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
-dataset_root = '/home/liuxin/Documents/CV/Project/SkmtSeg/data/SKMT/Seg'
-images_path = os.path.join(dataset_root, 'SegmentationClass')
+dataset_root = '../../data/SKMT/Seg'
+images_path = os.path.join(dataset_root, 'SegmentationClass_AUG')
 
 
 
@@ -39,11 +39,12 @@ def frequence():
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
         img = cv2.imread(image_path)
-        '''for h in range(0, img.shape[0]):
+        #print(img.)
+        for h in range(0, img.shape[0]):
             for w in range(0, img.shape[1]):
                 (b,g,r) = img[h,w]
                 if (b,g,r) != (0, 0, 0):  
-                    print((b,g,r))'''
+                    print((b,g,r))
         for ii, label in enumerate(SkmtDataSet.CLASSES):
             #if ii != 0:
             class_pixs[ii], clss_n[ii] = find_pic(img, [ii,ii,ii], class_pixs[ii], clss_n[ii])
