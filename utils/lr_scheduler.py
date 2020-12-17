@@ -46,6 +46,7 @@ class LR_Scheduler(object):
         elif self.mode == 'poly':
             lr = self.lr * pow((1 - 1.0 * T / self.N), 0.9)
         elif self.mode == 'step':
+            #TODO:从0.1修改为0.5
             lr = self.lr * (0.1 ** (epoch // self.lr_step))
         else:
             raise NotImplemented

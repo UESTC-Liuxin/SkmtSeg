@@ -30,7 +30,7 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
     if sync_bn:
         BatchNorm=SynchronizedBatchNorm2d
     else:
-        BatchNorm=TempBatchNorm
+        BatchNorm=nn.BatchNorm2d
     #选择backbone
     backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
 

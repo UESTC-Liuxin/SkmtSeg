@@ -13,6 +13,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from utils.lr_scheduler import LR_Scheduler
+
 class Trainer(object):
 
     def __init__(self,args,dataloader:DataLoader,model:nn.Module,optimizer,
@@ -35,6 +37,9 @@ class Trainer(object):
         self.criterion=criterion
         self.optimizer=optimizer
         self.start_epoch=0
+        # Define lr scheduler
+        self.scheduler = LR_Scheduler('step', args.lr,args.max_epochs, len(self.dataloader),
+                                      lr_step=40)
         #进行训练恢复
         if(args.resume):
             self.resume()
@@ -48,16 +53,7 @@ class Trainer(object):
         self.start_epoch=checkpoint['epoch']
         self.logger.info("---------------resume end....")
 
-    def adjust_learning_rate(self,epoch, max_epoch, curEpoch_iter, perEpoch_iter, baselr):
-        """
-        poly learning stategyt
-        lr = baselr*(1-iter/max_iter)^power
-        """
-        cur_iter = epoch * perEpoch_iter + curEpoch_iter
-        max_iter = max_epoch * perEpoch_iter
-        lr = baselr * pow((1 - 1.0 * cur_iter / max_iter), 0.9)
 
-        return lr
 
     def dict_to_cuda(self,tensors):
         cuda_tensors={}
@@ -67,7 +63,7 @@ class Trainer(object):
             cuda_tensors[key]=value
         return cuda_tensors
 
-    def train_one_epoch(self,epoch,writer):
+    def train_one_epoch(self,epoch,writer,best_pred):
         """
 
         :param epoch:
@@ -79,15 +75,8 @@ class Trainer(object):
         pbar=tqdm(self.dataloader,ncols=100)
         for iter, batch in enumerate(pbar):
             pbar.set_description("Training Processing epoach:{}".format(epoch))
-            lr = self.adjust_learning_rate(
-                epoch=epoch,
-                max_epoch=self.args.max_epochs,
-                curEpoch_iter=iter,
-                perEpoch_iter=total_batches,
-                baselr=self.args.lr
-            )
-            for param_group in self.optimizer.param_groups:
-                param_group['lr'] = lr
+            self.scheduler(self.optimizer, iter, epoch, best_pred)
+
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
             output=self.model(batch)
