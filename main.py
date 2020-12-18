@@ -73,13 +73,13 @@ def main(args,logger,summary):
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
     CRITERION = dict(
-        # auxiliary=dict(
-        #     losses=dict(
-        #         ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-        #         # dice=dict(smooth=1, p=2, reduction='mean')
-        #     ),
-        #     loss_weights=[1]
-        # ),
+        auxiliary=dict(
+            losses=dict(
+                ce=dict(reduction='mean')
+                # dice=dict(smooth=1, p=2, reduction='mean')
+            ),
+            loss_weights=[1]
+        ),
 
         trunk=dict(
             losses=dict(
