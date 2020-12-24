@@ -15,7 +15,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
+import pandas as pd
 from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
@@ -40,7 +40,7 @@ def main(args,logger,summary):
     torch.manual_seed(seed)  # set random seed for cpu
 
 
-    train_set=SkmtDataSet(args,split='train')
+    train_set = SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
@@ -108,7 +108,7 @@ def main(args,logger,summary):
     start_epoch = 0
     best_mIoU = 0.
 
-    trainer=Trainer(args=args,dataloader=train_loader,model=model,
+    trainer = Trainer(args=args,dataloader=train_loader,model=model,
                     optimizer=optimizer,criterion=criterion,logger=logger,summary=summary)
     tester = Tester(args=args,dataloader=test_loader,model=model,
                     criterion=criterion,logger=logger,summary=summary)
@@ -118,11 +118,15 @@ def main(args,logger,summary):
         trainer.train_one_epoch(epoch,writer)
 
         if(epoch%args.show_val_interval==0):
-            Acc,mAcc,mIoU,FWIoU=tester.test_one_epoch(epoch,writer)
+            Acc,mAcc,mIoU,FWIoU,confusion_matrix=tester.test_one_epoch(epoch,writer)
 
             new_pred = mIoU
             if new_pred > best_mIoU:
                 best_mIoU = new_pred
+                best_confusion_matrix = confusion_matrix
+                # save the confusion matrix
+                data1 = pd.DataFrame(best_confusion_matrix)
+                data1.to_csv(args.savedir +'confusion_matrix.csv')
                 # save the model
                 model_file_name = args.savedir + '/best_model.pth'
                 state = {"epoch": epoch + 1,
@@ -131,6 +135,8 @@ def main(args,logger,summary):
                          "criterion": criterion.state_dict()
                          }
                 torch.save(state, model_file_name)
+            logger.info("======>best epoch:")
+            logger.info(best_mIoU)
 
     model_file_name = args.savedir + '/resume_model.pth'
     state = {"epoch": epoch + 1,
