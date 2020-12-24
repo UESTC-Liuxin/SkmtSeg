@@ -59,9 +59,9 @@ class RandomHorizontalFlip(object):
     def __call__(self, sample):
         img = sample['image']
         mask = sample['label']
-        if random.random() < 0.5:
-            img = img.transpose(Image.FLIP_LEFT_RIGHT)
-            mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+        # if random.random() < 0.5:
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
 
         return {'image': img,
                 'label': mask}
@@ -86,9 +86,9 @@ class RandomGaussianBlur(object):
     def __call__(self, sample):
         img = sample['image']
         mask = sample['label']
-        if random.random() < 0.5:
-            img = img.filter(ImageFilter.GaussianBlur(
-                radius=random.random()))
+        # if random.random() < 0.5:
+        img = img.filter(ImageFilter.GaussianBlur(
+            radius=random.random()))
 
         return {'image': img,
                 'label': mask}
@@ -104,7 +104,8 @@ class RandomScaleCrop(object):
         img = sample['image']
         mask = sample['label']
         # random scale (short edge)
-        short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
+        # short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
+        short_size =int(self.base_size)
         w, h = img.size
         if h > w:
             ow = short_size
@@ -122,8 +123,10 @@ class RandomScaleCrop(object):
             mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=self.fill)
         # random crop crop_size
         w, h = img.size
-        x1 = random.randint(0, w - self.crop_size)
-        y1 = random.randint(0, h - self.crop_size)
+        # x1 = random.randint(0, w - self.crop_size)
+        # y1 = random.randint(0, h - self.crop_size)
+        x1=0
+        y1=0
         img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
         mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
 

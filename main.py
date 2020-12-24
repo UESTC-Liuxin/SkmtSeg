@@ -29,17 +29,15 @@ from dataloader.simplers import CustomRandomSampler, BatchSampler
 from modeling import build_skmtnet
 
 def main(args,logger,summary):
-    cudnn.enabled = True     # Enables bencnmark mode in cudnn, to enable the inbuilt
-    cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
-                             # our hardware
-
-    seed = random.randint(1, 10000)
-    logger.info('======>random seed {}'.format(seed))
-
-    random.seed(seed)  # python random seed
-    np.random.seed(seed)  # set numpy random seed
-    torch.manual_seed(seed)  # set random seed for cpu
-
+    seed=6000
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    np.random.seed(seed)  # Numpy module.
+    random.seed(seed)  # Python random module.
+    torch.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
     train_set=SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
@@ -47,9 +45,13 @@ def main(args,logger,summary):
 
     sampler=CustomRandomSampler(train_set,batch_size=args.batch_size)
     batch_sampler=BatchSampler(sampler)
-    train_loader = DataLoader(train_set, batch_sampler=batch_sampler, **kwargs)
 
-    test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
+    def worker_init_fn(worker_id):
+        np.random.seed(int(seed))
+
+    train_loader = DataLoader(train_set, batch_sampler=batch_sampler,worker_init_fn=worker_init_fn,**kwargs)
+
+    test_loader = DataLoader(val_set, batch_size=1, drop_last=True, worker_init_fn=worker_init_fn,shuffle=False, **kwargs)
 
 
     logger.info('======> building network')
@@ -75,7 +77,8 @@ def main(args,logger,summary):
     CRITERION = dict(
         auxiliary=dict(
             losses=dict(
-                ce=dict(reduction='mean')
+                smoothce=dict(reduction='mean')
+                # ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
@@ -83,8 +86,9 @@ def main(args,logger,summary):
 
         trunk=dict(
             losses=dict(
+                smoothce=dict(reduction='mean')
                 # focal=dict(reduction='mean')
-                ce=dict(reduction='mean')
+                # ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]

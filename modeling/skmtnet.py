@@ -20,12 +20,14 @@ class SkmtNet(nn.Module):
         #TODO:修改单个trunk为多个trunk
         self.trunk1=trunk1
         self.trunk2 = trunk2
-        self.trunk3 = trunk3
+        self.trunk_all = trunk3
         # self.trunk4 = trunk4
         # self.trunk5 = trunk5
         # self.trunks=[self.trunk1,self.trunk2,self.trunk3,self.trunk4,self.trunk5]
-        self.trunks = [self.trunk1, self.trunk2, self.trunk3]
+        self.trunks = [self.trunk1, self.trunk2]
         self.num_classes=num_classes
+        #用于学习的加权参数
+        self.alpha  = nn.Parameter(torch.rand(num_classes,1,1,requires_grad=True))
 
     def section_to_trunk(self,section):
         """
@@ -34,11 +36,11 @@ class SkmtNet(nn.Module):
         :return:
         """
         if(section==1 or section==5):
-            index=0
+            index=None
         elif(section==2):
-            index=1
+            index=0
         else:
-            index=2
+            index=1
 
         return index
 
@@ -52,14 +54,22 @@ class SkmtNet(nn.Module):
         base_out=self.backbone(img)
         index=self.section_to_trunk(sections[0])
         #提取单个batch的相关tensor出来组成新的列表
-        trunk_out=self.trunks[index](base_out)
+        trunk_out_all = self.trunk_all(base_out)
+        if(index is not None):
+            trunk_out_section=self.trunks[index](base_out)
+            #对每个通道进行加权相加，训练取最好的类别。
+            self.w=torch.stack([self.alpha]*trunk_out_all.shape[0],0)
+            trunk_out_all=trunk_out_all*self.w+(1-self.w)*trunk_out_section
+
+
+
         # trunk_out = self.trunk(base_out)
         if(self.auxiliary):
             auxiliary_out=self.auxiliary(base_out)
         else:
             auxiliary_out=None
 
-        return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out}
+        return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out_all}
 
 
 
