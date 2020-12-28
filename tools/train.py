@@ -52,6 +52,7 @@ class Trainer(object):
         """
         poly learning stategyt
         lr = baselr*(1-iter/max_iter)^power
+        """
 
         cur_iter = epoch * perEpoch_iter + curEpoch_iter
         max_iter = max_epoch * perEpoch_iter
@@ -66,7 +67,7 @@ class Trainer(object):
         else:
             lr = 1e-4
 
-
+        """
         return lr
 
     def dict_to_cuda(self,tensors):
