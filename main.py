@@ -56,8 +56,8 @@ def main(args,logger,summary):
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes,output_stride = 16)
+    model = build_skmtnet(backbone='wide_resnet50_2',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+                          num_classes=args.num_classes,output_stride = 32)
 
     logger.info("======> computing network parameters")
     total_paramters = netParams(model)
@@ -77,8 +77,9 @@ def main(args,logger,summary):
     CRITERION = dict(
         auxiliary=dict(
             losses=dict(
-                smoothce=dict(reduction='mean')
-                # ce=dict(reduction='mean')
+                # smoothce=dict(size_average=True),
+                # iou=dict(n_classes=11)
+                ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]
@@ -86,9 +87,10 @@ def main(args,logger,summary):
 
         trunk=dict(
             losses=dict(
-                smoothce=dict(reduction='mean')
+                # smoothce=dict(size_average=True),
+                # iou=dict(n_classes=11)
                 # focal=dict(reduction='mean')
-                # ce=dict(reduction='mean')
+                ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
             loss_weights=[1]

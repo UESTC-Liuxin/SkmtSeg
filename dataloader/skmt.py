@@ -31,6 +31,7 @@ class SkmtDataSet(Dataset):
     CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
                           0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
 
+
     #TODO:取消未出现的类
     # NUM_CLASSES = len(CLASSES)
     NUM_CLASSES=11
@@ -91,6 +92,7 @@ class SkmtDataSet(Dataset):
         _section=self.get_section(index)
         sample = {'image': _img, 'label': _target,'section':_section}
 
+
         for split in self.split:
             if split == "train":
                 for key,value in self.transform_tr(sample).items():
@@ -118,7 +120,9 @@ class SkmtDataSet(Dataset):
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
-            tr.RandomGaussianBlur(),
+            # tr.FixScaleCrop(crop_size=self.args.crop_size),
+            tr.RandomRotate(10),
+            # tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()]
             )
@@ -127,7 +131,7 @@ class SkmtDataSet(Dataset):
 
     def transform_val(self, sample):
         composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.args.crop_size),
+            tr.FixedResize(self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
 

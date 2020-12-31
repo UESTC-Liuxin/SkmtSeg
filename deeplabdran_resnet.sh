@@ -13,5 +13,5 @@ python main.py --trunk_head "deeplab_dranet"\
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/deeplab_dranet_resnet_dws_fcn/" \
+              --savedir "./runs/deeplab_dranet_resnet/" \
               --gpus $GPUS

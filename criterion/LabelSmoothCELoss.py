@@ -25,7 +25,7 @@ class BasicLossModule(nn.Module):
         batch_average: bool (default True). Loss will be divided by (n)
     """
 
-    def __init__(self, ignore_index=255, custom_weight=None, batch_weight=True,
+    def __init__(self, ignore_index=255, custom_weight=None, batch_weight=False,
                  size_average=True, batch_average=True, upper_bound=1.0):
         super(BasicLossModule, self).__init__()
 
@@ -415,6 +415,7 @@ class LabelSmoothCrossEntropy(BasicLossModule):
         return loss
 
 
+
 class LabelSmoothCrossEntropy2D(LabelSmoothCrossEntropy):
     """
     Labels Smooth Loss 2D for segmentation
@@ -423,7 +424,7 @@ class LabelSmoothCrossEntropy2D(LabelSmoothCrossEntropy):
         custom_weight: numpy array or list (default None). The weight of each category. For example,
             [0.2, 0.1, ..., 0.1], if `custom_weight` is not None, `batch_weight` will be ignored
         batch_weight: bool (default True). If true, the whole batch is used to calculate weights
-        size_average: bool (default True). Loss will be divided by (h * w) (--unused for this version)
+        size_average: bool (default True). Loss will be divided by (h * w)
         batch_average: bool (default True). Loss will be divided by (n)
     Forward:
         logit: 4-D torch.Tensor. The predict result without `sigmoid/softmax`, which shape is (n, c, h, w)
@@ -441,16 +442,18 @@ class LabelSmoothCrossEntropy2D(LabelSmoothCrossEntropy):
         # Get `ign_index` and `pos_index`
         ign_index = (target == self.ignore_index)
         pos_index = (target != self.ignore_index)
-        pos_index = pos_index.data.cpu().numpy().astype(bool)
+        pos_index = pos_index.data.cpu().numpy().astype(bool)  # n,h,w
 
         # Init weight
-        weight = torch.Tensor(logit.size()).fill_(0).numpy()
+        weight = torch.Tensor(logit.size()).fill_(0).numpy().transpose((0, 2, 3, 1))  # n,h,w,c
         if self.custom_weight is not None:
-            weight[pos_index, :] = self.custom_weight
+            weight[pos_index] = self.custom_weight
+            weight = weight.transpose((0, 3, 1, 2))  # n,c,h,w
             weight = torch.from_numpy(weight).to(logit.device)
         else:
             if self.batch_weight:
-                weight[pos_index, :] = self.calculate_weights(target, c).data.cpu().numpy()
+                weight[pos_index] = self.calculate_weights(target, c).data.cpu().numpy()
+                weight = weight.transpose((0, 3, 1, 2))  # n,c,h,w
                 weight = torch.from_numpy(weight).to(logit.device)
             else:
                 weight = None

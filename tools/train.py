@@ -38,8 +38,7 @@ class Trainer(object):
         self.optimizer=optimizer
         self.start_epoch=0
         # Define lr scheduler
-        self.scheduler = LR_Scheduler('step', args.lr,args.max_epochs, len(self.dataloader),
-                                      lr_step=40)
+        self.scheduler = LR_Scheduler('poly', args.lr,args.max_epochs, len(self.dataloader))
         #进行训练恢复
         if(args.resume):
             self.resume()

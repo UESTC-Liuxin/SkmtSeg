@@ -13,23 +13,16 @@ import torch
 import torch.hub
 import torch, numpy as np
 import torch.nn as nn
-
+from modeling.model_utils.backbone2head import get_inchannels,get_low_level_feat
 
 class FCN(torch.nn.Module):
 
     def __init__(self, backbone:str,BatchNorm,output_stride,num_classes):
 
         super(FCN, self).__init__()
-
         self.BatchNorm=BatchNorm
-
-        if(backbone=='mobilenet'):
-            in_channels=[320,32,24,16]
-        elif(backbone=="resnet50"):
-            in_channels=[2048,1024,512,256]
-        else:
-            raise ValueError
-
+        self.backbone=backbone
+        in_channels = get_inchannels(self.backbone)
         if(output_stride==8):
             self.model=FCN8(BatchNorm=BatchNorm,in_channels=in_channels,num_classes=num_classes)
         elif(output_stride==16):

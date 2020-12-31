@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 @description:
-
 @author: LiuXin
 @contact: xinliu1996@163.com
 @Created on: 2020/11/5 下午2:46
@@ -59,9 +58,9 @@ class RandomHorizontalFlip(object):
     def __call__(self, sample):
         img = sample['image']
         mask = sample['label']
-        # if random.random() < 0.5:
-        img = img.transpose(Image.FLIP_LEFT_RIGHT)
-        mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+        if random.random() < 0.5:
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+            mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
 
         return {'image': img,
                 'label': mask}
@@ -86,10 +85,13 @@ class RandomGaussianBlur(object):
     def __call__(self, sample):
         img = sample['image']
         mask = sample['label']
-        # if random.random() < 0.5:
-        img = img.filter(ImageFilter.GaussianBlur(
-            radius=random.random()))
-
+        if random.random() < 0.5:
+            img = img.filter(ImageFilter.GaussianBlur(
+                radius=random.random()))
+        import matplotlib.pyplot as plt
+        plt.imshow(img)
+        plt.show()
+        i
         return {'image': img,
                 'label': mask}
 
@@ -104,8 +106,7 @@ class RandomScaleCrop(object):
         img = sample['image']
         mask = sample['label']
         # random scale (short edge)
-        # short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
-        short_size =int(self.base_size)
+        short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
         w, h = img.size
         if h > w:
             ow = short_size
@@ -123,10 +124,8 @@ class RandomScaleCrop(object):
             mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=self.fill)
         # random crop crop_size
         w, h = img.size
-        # x1 = random.randint(0, w - self.crop_size)
-        # y1 = random.randint(0, h - self.crop_size)
-        x1=0
-        y1=0
+        x1 = random.randint(0, w - self.crop_size)
+        y1 = random.randint(0, h - self.crop_size)
         img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
         mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
 
@@ -139,6 +138,7 @@ class FixScaleCrop(object):
         self.crop_size = crop_size
 
     def __call__(self, sample):
+
         img = sample['image']
         mask = sample['label']
         w, h = img.size
@@ -175,4 +175,3 @@ class FixedResize(object):
 
         return {'image': img,
                 'label': mask}
-
