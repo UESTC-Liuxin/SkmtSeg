@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from utils.lr_scheduler import LR_Scheduler
 
 class Trainer(object):
 
@@ -35,6 +36,8 @@ class Trainer(object):
         self.criterion=criterion
         self.optimizer=optimizer
         self.start_epoch=0
+        self.scheduler = LR_Scheduler('step', args.lr, args.max_epochs, len(self.dataloader),
+                                      lr_step=30)
         #进行训练恢复
         if(args.resume):
             self.resume()
@@ -78,7 +81,7 @@ class Trainer(object):
             cuda_tensors[key]=value
         return cuda_tensors
 
-    def train_one_epoch(self,epoch,writer):
+    def train_one_epoch(self,epoch,writer,best_pred):
         """
 
         :param epoch:
@@ -90,15 +93,18 @@ class Trainer(object):
         pbar=tqdm(self.dataloader,ncols=100)
         for iter, batch in enumerate(pbar):
             pbar.set_description("Training Processing epoach:{}".format(epoch))
-            lr = self.adjust_learning_rate(
-                epoch=epoch,
-                max_epoch=self.args.max_epochs,
-                curEpoch_iter=iter,
-                perEpoch_iter=total_batches,
-                baselr=self.args.lr
-            )
-            for param_group in self.optimizer.param_groups:
-                param_group['lr'] = lr
+            # lr = self.adjust_learning_rate(
+            #     epoch=epoch,
+            #     max_epoch=self.args.max_epochs,
+            #     curEpoch_iter=iter,
+            #     perEpoch_iter=total_batches,
+            #     baselr=self.args.lr
+            # )
+            # for param_group in self.optimizer.param_groups:
+            #     param_group['lr'] = lr
+            self.scheduler(self.optimizer, iter, epoch, best_pred)
+
+
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
             output=self.model(batch)
@@ -112,14 +118,16 @@ class Trainer(object):
             if (iter % self.args.show_interval == 0):
                 pred=np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
                 gt = batch['label'][0]  #每次显示第一张图片
+                img = batch['image'][0]  # 每次显示第一张图片
                 gt=np.asarray(gt.cpu(), dtype=np.uint8)
-                self.visualize(gt, pred, epoch*1000+iter,writer,"train")
+                img= np.asarray(img.cpu(), dtype=np.uint8)
+                self.visualize(gt,img, pred, epoch*1000+iter,writer,"train")
 
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
         writer.add_scalar('train/loss_epoch', sum(tloss)/len(tloss), epoch)
 
-    def visualize(self,gt,pred,epoch,writer,title):
+    def visualize(self,gt,img,pred,epoch,writer,title):
         """
 
         :param input:
@@ -128,10 +136,13 @@ class Trainer(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-
         pred=self.dataloader.dataset.decode_segmap(pred)
+        img = np.transpose(img,(1,2, 0))
+
+        self.summary.visualize_image(writer, title + '/img', img, epoch)
         self.summary.visualize_image(writer,title+'/gt',gt,epoch)
         self.summary.visualize_image(writer, title+'/pred', pred, epoch)
+
 
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题

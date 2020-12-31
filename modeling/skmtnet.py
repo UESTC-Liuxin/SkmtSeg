@@ -22,11 +22,14 @@ class SkmtNet(nn.Module):
 
     def forward(self, input):
         img = input['image']
-        base_out=self.backbone(img)
+        if (self.backbone):
+            base_out=self.backbone(img)
+        else:
+            base_out = img
 
         trunk_out = self.trunk(base_out)
         if(self.auxiliary):
-            auxiliary_out=self.auxiliary(base_out)
+            auxiliary_out = self.auxiliary(base_out)
         else:
             auxiliary_out=None
 

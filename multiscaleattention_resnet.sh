@@ -1,10 +1,10 @@
 
 #!/usr/bin/env bash
 
-GPUS="1"
+GPUS="0"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --trunk_head "multiscaleattention"\
-              --batch_size 2   \
+              --batch_size 4   \
               --crop_size 512 \
               --image_size 512 \
               --max_epochs 100 \
@@ -12,5 +12,5 @@ python main.py --trunk_head "multiscaleattention"\
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/multiScaleAttention_resnet_fcn/" \
+              --savedir "./runs/net/multiScaleAttention/" \
               --gpus $GPUS

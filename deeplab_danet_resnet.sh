@@ -1,6 +1,6 @@
 
 #!/usr/bin/env bash
-GPUS="0"
+GPUS="2"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --trunk_head "deeplab_danet"\
               --auxiliary "fcn"\
@@ -12,5 +12,5 @@ python main.py --trunk_head "deeplab_danet"\
               --lr 0.004  \
               --show_interval 50 \
               --show_val_interval 1 \
-              --savedir "./runs/aug/all/" \
+              --savedir "./runs/deeplab_nonlocal/" \
               --gpus $GPUS

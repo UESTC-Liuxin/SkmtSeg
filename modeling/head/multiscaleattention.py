@@ -7,8 +7,8 @@ from __future__ import division
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from modeling.model_utils.da_att import PAM_Module
-from modeling.model_utils.da_att import CAM_Module
+from modeling.model_utils.da_att import DANetHead
+
 
 class MultiScaleAttention(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
@@ -33,7 +33,7 @@ class MultiScaleAttention(nn.Module):
         # self.head4 = DANetHead(128, 64, BatchNorm)
         # self.head3 = DANetHead(128, 64, BatchNorm)
         # self.head2 = DANetHead(128, 64, BatchNorm)
-        # self.head1 = DANetHead(128, 64, BatchNorm)
+        self.head = DANetHead(128, num_classes, BatchNorm)
 
         self.output_stride = output_stride
 
@@ -42,13 +42,13 @@ class MultiScaleAttention(nn.Module):
             self.freeze_bn()
 
     def forward(self, inputs):
-        inputs4 = self.head4(inputs[0])
-        inputs3 = self.head3(inputs[1])
-        inputs2 = self.head2(inputs[2])
-        #inputs1 = inputs[3]
-        # inputs4 = self.down4(inputs[0])
-        # inputs3 = self.down3(inputs[1])
-        # inputs2 = self.down2(inputs[2])
+        # inputs4 = self.head4(inputs[0])
+        # inputs3 = self.head3(inputs[1])
+        # inputs2 = self.head2(inputs[2])
+
+        inputs4 = self.down4(inputs[0])
+        inputs3 = self.down3(inputs[1])
+        inputs2 = self.down2(inputs[2])
         down4 = F.upsample(inputs4, size=inputs[3].size()[2:], mode='bilinear')
         down3 = F.upsample(inputs3, size=inputs[3].size()[2:], mode='bilinear')
         down2 = F.upsample(inputs2, size=inputs[3].size()[2:], mode='bilinear')
@@ -56,7 +56,7 @@ class MultiScaleAttention(nn.Module):
 
         fuse1 = self.fuse1(torch.cat((down4, down3, down2, down1), 1))
         fuse1 = self.conv8(fuse1)
-        #attention4 = self.head4(torch.cat((down4, fuse1), dim=1))
+        #attention4 = self.head(torch.cat((down4, fuse1), dim=1))
         #attention3 = self.head3(torch.cat((down3, fuse1), dim=1))
         #attention2 = self.head2(torch.cat((down2, fuse1), dim=1))
         #attention1 = self.head1(torch.cat((down1, fuse1), dim=1))
@@ -66,53 +66,6 @@ class MultiScaleAttention(nn.Module):
         predict = F.interpolate(fuse1, scale_factor=self.output_stride//4,mode="bilinear",align_corners=True)
         # return predict4
         return predict
-        
-class DANetHead(nn.Module):
-    def __init__(self, in_channels, out_channels, BatchNorm):
-        super(DANetHead, self).__init__()
-        inter_channels = in_channels // 4
-        self.conv5a = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
-                                   BatchNorm(inter_channels),
-                                   nn.ReLU())
-        
-        self.conv5c = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
-                                   BatchNorm(inter_channels),
-                                   nn.ReLU())
-
-        self.sa = PAM_Module(inter_channels)
-        self.sc = CAM_Module(inter_channels)
-        self.conv51 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
-                                   BatchNorm(inter_channels),
-                                   nn.ReLU())
-        self.conv52 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
-                                   BatchNorm(inter_channels),
-                                   nn.ReLU())
-
-        self.conv6 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(inter_channels, out_channels, 1))
-        self.conv7 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(inter_channels, out_channels, 1))
-
-        self.conv8 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(inter_channels, out_channels, 1))
-
-    def forward(self, x):
-        feat1 = self.conv5a(x)
-        sa_feat = self.sa(feat1)
-        sa_conv = self.conv51(sa_feat)
-        sa_output = self.conv6(sa_conv)
-
-        feat2 = self.conv5c(x)
-        sc_feat = self.sc(feat2)
-        sc_conv = self.conv52(sc_feat)
-        sc_output = self.conv7(sc_conv)
-
-        feat_sum = sa_conv+sc_conv
-        
-        sasc_output = self.conv8(feat_sum)
-
-        '''output = [sasc_output]
-        output.append(sa_output)
-        output.append(sc_output)'''
-        return sasc_output
-
 
 class MultiConv(nn.Module):
     def __init__(self, in_ch, out_ch):

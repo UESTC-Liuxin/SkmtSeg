@@ -4,11 +4,9 @@ import torch.nn.functional as F
 from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from modeling.model_utils.aspp import build_aspp
 from modeling.model_utils.decoder import build_decoder
-from modeling.backbone import build_backbone
-from modeling.model_utils.da_att import PAM_Module
-from modeling.model_utils.da_att import CAM_Module
-from modeling.head.danet import DANetHead
+from modeling.model_utils.da_att import DANetHead
 
+from modeling.model_utils.non_local_parts import *
 
 class DeepLabDANet(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
@@ -23,13 +21,14 @@ class DeepLabDANet(nn.Module):
             in_channels = 2048
         else:
             raise NotImplementedError
+        self.net = multi_head_attention_2d(in_channels, in_channels, in_channels, num_classes, 4, 0.5, 'SAME')
         self.head = DANetHead(in_channels, num_classes, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
             self.freeze_bn()
 
     def forward(self, inputs):
-        x0 = self.head(inputs[0])
+        x0 = self.net(inputs[0])
         x = self.aspp(inputs[0])
         if(self.backbone=='xception'):#不同的backbone有不同的输出，处理不同
             low_level_feat = inputs[1]

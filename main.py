@@ -50,7 +50,7 @@ def main(args,logger,summary):
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+    model = build_skmtnet(backbone=args.backbone,auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes,output_stride = 16)
 
     logger.info("======> computing network parameters")
@@ -115,7 +115,7 @@ def main(args,logger,summary):
 
     writer=summary.create_summary()
     for epoch in range(start_epoch,args.max_epochs):
-        trainer.train_one_epoch(epoch,writer)
+        trainer.train_one_epoch(epoch,writer,best_mIoU)
 
         if(epoch%args.show_val_interval==0):
             Acc,mAcc,mIoU,FWIoU,confusion_matrix=tester.test_one_epoch(epoch,writer)
@@ -157,6 +157,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--backbone', default='resnet50', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
     parser.add_argument('--crop_size', default=512, type=int)

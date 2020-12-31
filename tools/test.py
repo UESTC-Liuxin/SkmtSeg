@@ -129,7 +129,6 @@ class Tester(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-
         pred=self.dataloader.dataset.decode_segmap(pred)
         self.summary.visualize_image(writer,title+'/gt',gt,epoch)
         self.summary.visualize_image(writer, title+'/pred', pred, epoch)

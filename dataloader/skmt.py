@@ -115,15 +115,18 @@ class SkmtDataSet(Dataset):
         return _img, _target
 
     def transform_tr(self, sample):
-        augm = au.Augment()
-        sample = augm(sample)
+        #augm = au.Augment()
+        #sample = augm(sample)
         composed_transforms = transforms.Compose([
-             #tr.RandomHorizontalFlip(),
-             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
-             #tr.RandomGaussianBlur(),
-             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-             tr.ToTensor()]
-             )
+            #tr.RandomHorizontalFlip(),
+            # tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
+            tr.FixedResize(self.args.crop_size),
+            #tr.RandomGaussianBlur(),
+            #resnet
+            #tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            tr.Normalize(mean=(0.318, 0.318, 0.316), std=(0.114, 0.114, 0.115)),
+            tr.ToTensor()]
+            )
 
         return composed_transforms(sample)
 
