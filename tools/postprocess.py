@@ -63,11 +63,8 @@ if __name__ == '__main__':
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
         img = cv2.imread(image_path)
-        #img = cv2.resize(img,(512, 512), interpolation=cv2.INTER_CUBIC)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img1 = decode_segmap(img)
-        # print(np.max(img1))
-        # i
         img1 = Image.fromarray(np.uint8(img1))
         img1.save(os.path.join(dataset_root, str(count) + '.png'))
 
@@ -75,7 +72,7 @@ if __name__ == '__main__':
         temp = decode_segmap(temp)
         temp = Image.fromarray(np.uint8(temp))
         #temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
-        print(temp.mode)
+
         temp.save(os.path.join(dataset_root, str(count) + '_new.png'))
 
 

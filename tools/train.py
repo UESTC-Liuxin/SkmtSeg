@@ -104,9 +104,9 @@ class Trainer(object):
             #     param_group['lr'] = lr
             self.scheduler(self.optimizer, iter, epoch, best_pred)
 
-
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
+
             output=self.model(batch)
 
             loss = self.criterion(output,batch['label'])
