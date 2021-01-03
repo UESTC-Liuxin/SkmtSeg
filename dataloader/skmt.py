@@ -72,7 +72,7 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
-                #print(_image)
+                # print(_image)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)
@@ -101,10 +101,9 @@ class SkmtDataSet(Dataset):
                 return self.transform_val(sample)
 
     def get_section(self,index):
-        _name=self.images[index]
-        _name_split=_name.split('.')
-        image_name_split=_name_split[-1].split('_')
-        _section =image_name_split[0][-2]
+        _name = self.images[index].split('/')[-1]
+        _section = _name.split('_')[0][-2]
+        return int(_section)
 
 
 

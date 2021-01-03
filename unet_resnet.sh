@@ -6,7 +6,7 @@ GPUS="2"
 export CUDA_VISIBLE_DEVICES=$GPUS
 python main.py --batch_size 4   \
               --auxiliary "fcn"  \
-              --trunk_head "unet" \
+              --trunk_head "resunet" \
               --crop_size 512 \
               --image_size 512 \
               --max_epochs 100 \

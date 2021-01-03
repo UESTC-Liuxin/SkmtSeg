@@ -38,8 +38,27 @@ def decode_segmap(label_mask):
     rgb[:, :, 1] = g
     rgb[:, :, 2] = b
     return rgb
+def encode_segmap( mask):
+    """Encode segmentation label images as pascal classes
 
+    Args:
+        mask (np.ndarray): raw segmentation label image of dimension
+          (M, N, 3), in which the Pascal classes are encoded as colours.
+
+    Returns:
+        (np.ndarray): class map with dimensions (M,N), where the value at
+        a given location is the integer denoting the class index.
+    """
+    mask = mask.astype(int)
+    label_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.int16)
+
+    for ii, label in enumerate(SkmtDataSet.PALETTE):
+        label_mask[np.where(np.all(mask == label, axis=-1))[:2]] = ii
+    label_mask = label_mask.astype(int)
+    return label_mask
 def postprocess(img,classnum):
+    img = cv2.copyMakeBorder(img, 50,50,50,50, cv2.BORDER_CONSTANT,value=0)
+    h, w = img.shape
     temp = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
     for ii in range(1,classnum):
         img1 = find_pic(img,ii)
@@ -53,8 +72,16 @@ def postprocess(img,classnum):
             # 分别在复制的图像上和白色图像上绘制当前轮廓
             cv2.drawContours(temp, [c], 0, (ii,ii,ii), thickness=-1)
             break
-    temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+    temp = cv2.cvtColor(temp[50:h, 50:w], cv2.COLOR_BGR2GRAY)
     return temp
+
+def get_section(name):
+    print(name)
+    _name = name.split('/')[-1]
+    _section = _name.split('_')[0][-2]
+    print(_section)
+    return int(_section)
+
 
 
 if __name__ == '__main__':
@@ -63,8 +90,12 @@ if __name__ == '__main__':
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
         img = cv2.imread(image_path)
+        get_section(image_path)
+        img = encode_segmap(img)
+        print(img.mode)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img1 = decode_segmap(img)
+        #img1 = decode_segmap(img)
+
         img1 = Image.fromarray(np.uint8(img1))
         img1.save(os.path.join(dataset_root, str(count) + '.png'))
 

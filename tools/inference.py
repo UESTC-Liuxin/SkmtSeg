@@ -18,6 +18,8 @@ import PIL.Image as Image
 from modeling import build_skmtnet
 import os
 from dataloader.skmt import SkmtDataSet
+from tools.postprocess import postprocess
+
 
 class Inferencer(object):
 
@@ -119,7 +121,8 @@ def SegSkmt(args):
             img =img.to(device)
             sample = {'image': img}
             pre = infer.inference(sample)
-            infer.save(pre,img_name)
+            post = postprocess(pre, args.num_classes)
+            infer.save(post,img_name)
     end_time = time.time()
     cost_time = end_time - start_time
     print("finish it,cost ：%.8s s" % cost_time)
