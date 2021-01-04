@@ -13,6 +13,7 @@ from torch.utils.data import Dataset
 from mypath import Path
 from torchvision import transforms
 from dataloader.transforms_utils import custom_transforms as tr
+from dataloader.transforms_utils import augment as au
 from dataloader.transforms_utils import meta_transforms as meta_t
 
 class SkmtDataSet(Dataset):
@@ -72,6 +73,7 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
+                # print(_image)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)
@@ -106,6 +108,7 @@ class SkmtDataSet(Dataset):
     def get_section(self,index):
         _name=self.images[index].split('/')[-1]
         _section=_name.split('_')[0][-2]
+
         return int(_section)
 
 
@@ -117,6 +120,8 @@ class SkmtDataSet(Dataset):
         return _img, _target
 
     def transform_tr(self, sample):
+        #augm = au.Augment()
+        #sample = augm(sample)
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),

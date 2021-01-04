@@ -15,7 +15,11 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 
+<<<<<<< HEAD
 dataset_root = '/home/liuxin/Documents/CV/Project/SkmtSeg/data/SKMT/Seg'
+=======
+dataset_root = '../../data/SKMT/Seg'
+>>>>>>> origin/danet
 dataType = 'default'
 annFile = '{}/annotations/instances_{}.json'.format(dataset_root, dataType)
 img_path = os.path.join(dataset_root, 'JPEGImages')

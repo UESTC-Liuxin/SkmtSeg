@@ -45,7 +45,7 @@ class SkmtNet(nn.Module):
         #选择trunk
         trunk_out_section = self.trunk(base_out,index)
         if(self.auxiliary):
-            auxiliary_out=self.auxiliary(base_out)
+            auxiliary_out = self.auxiliary(base_out)
         else:
             auxiliary_out=None
         return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out_section}

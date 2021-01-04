@@ -15,7 +15,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
+import pandas as pd
 from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
@@ -39,7 +39,7 @@ def main(args,logger,summary):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-    train_set=SkmtDataSet(args,split='train')
+    train_set = SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
@@ -93,7 +93,13 @@ def main(args,logger,summary):
                 ce=dict(reduction='mean')
                 # dice=dict(smooth=1, p=2, reduction='mean')
             ),
-            loss_weights=[1]
+            trunk=dict(
+                losses=dict(
+                    ce=dict(reduction='mean')
+                    # dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[1]
+            )
         )
     )
     criterion = build_criterion(**CRITERION)
@@ -108,7 +114,7 @@ def main(args,logger,summary):
     start_epoch = 0
     best_mIoU = 0.
 
-    trainer=Trainer(args=args,dataloader=train_loader,model=model,
+    trainer = Trainer(args=args,dataloader=train_loader,model=model,
                     optimizer=optimizer,criterion=criterion,logger=logger,summary=summary)
     tester = Tester(args=args,dataloader=test_loader,model=model,
                     criterion=criterion,logger=logger,summary=summary)
@@ -135,8 +141,6 @@ def main(args,logger,summary):
             logger.info("======>best epoch:")
             logger.info(best_overall)
 
-
-
     model_file_name = args.savedir + '/resume_model.pth'
     state = {"epoch": epoch + 1,
              "model": model.state_dict(),
@@ -156,6 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--backbone', default='resnet50', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
     parser.add_argument('--crop_size', default=512, type=int)

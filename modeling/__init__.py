@@ -32,8 +32,10 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
     else:
         BatchNorm=nn.BatchNorm2d
     #选择backbone
-    backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
-
+    if (backbone):
+        backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
+    else:
+        backbone_model=None
     #选择auxiliary_head
     if(auxiliary_head):
         auxiliary_head_model=build_auxiliary_head(auxiliary_head,backbone,BatchNorm,output_stride,num_classes)
