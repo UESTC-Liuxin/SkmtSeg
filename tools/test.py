@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from metrics.metrics import Evaluator
 from tqdm import tqdm
 from prettytable import PrettyTable
-
+from tools.postprocess import postprocess
 
 class Tester(object):
 
@@ -80,7 +80,7 @@ class Tester(object):
 
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
-
+                pred = postprocess(pred,self.args.num_classes)
 
                 self.evaluator.add_batch(gt, pred)
 
