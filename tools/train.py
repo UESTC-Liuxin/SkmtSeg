@@ -36,8 +36,8 @@ class Trainer(object):
         self.criterion=criterion
         self.optimizer=optimizer
         self.start_epoch=0
-        self.scheduler = LR_Scheduler('step', args.lr, args.max_epochs, len(self.dataloader),
-                                      lr_step=30)
+        #self.scheduler = LR_Scheduler('step', args.lr, args.max_epochs, len(self.dataloader),
+        #                               lr_step=30)
         #进行训练恢复
         if(args.resume):
             self.resume()
@@ -93,23 +93,31 @@ class Trainer(object):
         pbar=tqdm(self.dataloader,ncols=100)
         for iter, batch in enumerate(pbar):
             pbar.set_description("Training Processing epoach:{}".format(epoch))
-            # lr = self.adjust_learning_rate(
-            #     epoch=epoch,
-            #     max_epoch=self.args.max_epochs,
-            #     curEpoch_iter=iter,
-            #     perEpoch_iter=total_batches,
-            #     baselr=self.args.lr
-            # )
-            # for param_group in self.optimizer.param_groups:
-            #     param_group['lr'] = lr
-            self.scheduler(self.optimizer, iter, epoch, best_pred)
+            lr = self.adjust_learning_rate(
+                epoch=epoch,
+                max_epoch=self.args.max_epochs,
+                curEpoch_iter=iter,
+                perEpoch_iter=total_batches,
+                baselr=self.args.lr
+            )
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = lr
+            # self.scheduler(self.optimizer, iter, epoch, best_pred)
 
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
 
-            output=self.model(batch)
-
-            loss = self.criterion(output,batch['label'])
+            if self.args.deep_supervision:
+                outputs = self.model(batch)
+                loss = 0
+                for outputl in outputs['trunk_out']:
+                    sample = {'trunk_out': outputl, 'auxiliary_out': outputs['auxiliary_out']}
+                    loss += self.criterion(sample, batch['label'])
+                loss /= len(outputs)
+                output = {'trunk_out': outputs['trunk_out'][-1], 'auxiliary_out': outputs['auxiliary_out']}
+            else:
+                output=self.model(batch)
+                loss = self.criterion(output,batch['label'])
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()

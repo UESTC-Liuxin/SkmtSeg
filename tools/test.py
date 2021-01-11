@@ -77,13 +77,21 @@ class Tester(object):
                 start_time = time.time()
 
                 batch = self.dict_to_cuda(batch)
-                output = self.model(batch)
-                loss = self.criterion(output, batch['label']).cuda()
-
+                if self.args.deep_supervision:
+                    outputs = self.model(batch)
+                    loss = 0
+                    for outputl in outputs['trunk_out']:
+                        sample = {'trunk_out': outputl, 'auxiliary_out': outputs['auxiliary_out']}
+                        loss += self.criterion(sample, batch['label']).cuda()
+                    loss /= len(outputs)
+                    output = {'trunk_out': outputs['trunk_out'][-1], 'auxiliary_out': outputs['auxiliary_out']}
+                else:
+                    output = self.model(batch)
+                    loss = self.criterion(output, batch['label']).cuda()
                 tloss.append(loss.item())
-
-                gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
+                gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
+
 
                 self.visualize(gt, pred, iter, writer,"test")
                 self.evaluator.add_batch(gt, pred)

@@ -6,8 +6,8 @@
 @contact: xinliu1996@163.com
 @Created on: 2020/11/10 上午10:42
 """
-from modeling.head import fcn,deeplabv3,danet,deeplab_danet,dran,deeplabdran,\
-                        unet,res_unet,dlinknet,multiscaleattention,nonlocalunet
+from modeling.head import fcn, deeplabv3, danet, deeplab_danet, dran, deeplabdran, \
+    unet, res_unet, dlinknet, multiscaleattention, nonlocalunet, unet_2plus, unet_3plus
 from modeling.head import auxiliary_fcn
 
 def build_head(head,backbone,BatchNorm, output_stride, num_classes):
@@ -34,6 +34,10 @@ def build_head(head,backbone,BatchNorm, output_stride, num_classes):
         return multiscaleattention.MultiScaleAttention(backbone, BatchNorm, output_stride, num_classes)
     elif (head == "nonlocalunet"):
         return nonlocalunet.NonlocalUNet(backbone, BatchNorm, output_stride, num_classes)
+    elif (head == "unet_2plus"):
+        return unet_2plus.UNet_Nested(backbone, BatchNorm, output_stride, num_classes)
+    elif (head == "unet_3plus"):
+        return unet_3plus.UNet_3Plus(backbone, BatchNorm, output_stride, num_classes)
     else:
         raise NotImplementedError
 

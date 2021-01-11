@@ -79,10 +79,10 @@ def main(args,logger,summary):
             ),
             trunk=dict(
                 losses=dict(
-                    ce=dict(reduction='mean')
-                    # dice=dict(smooth=1, p=2, reduction='mean')
+                    ce=dict(reduction='mean'),
+                    dice=dict(smooth=1, p=2, reduction='mean')
                 ),
-                loss_weights=[1]
+                loss_weights=[0.5,0.5]
             )
         )
     else:
@@ -157,10 +157,11 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
-    parser.add_argument('--backbone', default='resnet50', type=str)
+    parser.add_argument('--backbone', default=None, type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
     parser.add_argument('--crop_size', default=512, type=int)
+    parser.add_argument('--deep_supervision', default=False, type=bool)
     parser.add_argument('--max_epochs', type=int, help='the number of epochs: default 100 ')
     parser.add_argument('--num_classes', type=int)
     parser.add_argument('--lr', type=float)

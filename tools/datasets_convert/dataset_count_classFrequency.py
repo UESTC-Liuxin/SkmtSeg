@@ -12,8 +12,8 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
-dataset_root = '../../data/SKMT/Seg'
-images_path = os.path.join(dataset_root, 'SegmentationClass_AUG')
+dataset_root = '../../data/CAMUS'
+images_path = os.path.join(dataset_root, 'SegmentationClass')
 
 
 

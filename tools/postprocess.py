@@ -5,7 +5,8 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
-dataset_root = '../data/SKMT/Seg'
+
+dataset_root = '../data/CAMUS'
 images_path = os.path.join(dataset_root, 'SegmentationClass')
 
 def find_pic(img,ii):
@@ -90,11 +91,11 @@ if __name__ == '__main__':
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
         img = cv2.imread(image_path)
-        get_section(image_path)
-        img = encode_segmap(img)
-        print(img.mode)
+        # get_section(image_path)
+        #img = encode_segmap(img)
+        #print(img.mode)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #img1 = decode_segmap(img)
+        img1 = decode_segmap(img)
 
         img1 = Image.fromarray(np.uint8(img1))
         img1.save(os.path.join(dataset_root, str(count) + '.png'))

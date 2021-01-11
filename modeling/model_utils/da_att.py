@@ -51,7 +51,7 @@ class DANetHead(nn.Module):
         sc_output = self.conv7(sc_conv)
 
         feat_sum = sa_conv + sc_conv
-
+        # feat_sum = sc_conv
         sasc_output = self.conv8(feat_sum)
 
         '''output = [sasc_output]
