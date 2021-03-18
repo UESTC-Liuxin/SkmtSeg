@@ -51,7 +51,7 @@ def main(args,logger,summary):
     logger.info('======> building network')
     # set model
     model = build_skmtnet(backbone=args.backbone,auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes,output_stride = 16)
+                          num_classes=args.num_classes,output_stride = 16,img_size=args.image_size)
 
     logger.info("======> computing network parameters")
     total_paramters = netParams(model)

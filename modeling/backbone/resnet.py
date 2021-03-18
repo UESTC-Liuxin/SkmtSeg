@@ -124,14 +124,6 @@ class ResNet(nn.Module):
         x2=x = self.layer2(x)
         x1=x = self.layer3(x)
         x0= self.layer4(x)
-        # print(input.shape)
-        # print(x6.shape)
-        # print(x5.shape)
-        # print(x4.shape)
-        # print(x3.shape)
-        # print(x2.shape)
-        # print(x1.shape)
-        # print(x0.shape)
         return (x0,x1,x2,x3,x4,x5,x6)
 
     def get_1x_lr_params(self):
