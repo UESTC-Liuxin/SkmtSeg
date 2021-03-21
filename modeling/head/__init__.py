@@ -8,7 +8,7 @@
 """
 from modeling.head import fcn, deeplabv3, danet, deeplab_danet, dran, deeplabdran, \
     unet, res_unet, dlinknet, multiscaleattention, nonlocalunet, unet_2plus, unet_3plus
-from modeling.head import auxiliary_fcn,transunet
+from modeling.head import auxiliary_fcn,transunet,transfuse
 
 def build_head(head,backbone,BatchNorm, output_stride, num_classes,img_size):
 
@@ -40,6 +40,8 @@ def build_head(head,backbone,BatchNorm, output_stride, num_classes,img_size):
         return unet_3plus.UNet_3Plus(backbone, BatchNorm, output_stride, num_classes)
     elif (head == "transunet"):
         return transunet.TransUNet(backbone, BatchNorm, output_stride, num_classes,img_size)
+    elif (head == "transfuse"):
+        return transfuse.TransFuse(backbone, BatchNorm, output_stride, num_classes,img_size)
     else:
         raise NotImplementedError
 

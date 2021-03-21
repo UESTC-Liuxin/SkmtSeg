@@ -16,7 +16,7 @@ from dataloader.transforms_utils import custom_transforms as tr
 from dataloader.transforms_utils import augment as au
 from dataloader.transforms_utils import meta_transforms as meta_t
 
-class SkmtDataSet(Dataset):
+class CamusSet(Dataset):
     """
     PascalVoc dataset
     """

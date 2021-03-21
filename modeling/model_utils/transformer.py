@@ -112,7 +112,7 @@ class Embeddings(nn.Module):
         super(Embeddings, self).__init__()
         img_size = _pair(img_size)
         patch_size = _pair(patch_size)
-        n_patches = (img_size[0] // patch_size[0]//16) * (img_size[1] // patch_size[1]**2)
+        n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])
         self.patch_embeddings = Conv2d(in_channels=in_channels,
                                        out_channels=hidden_size,
                                        kernel_size=patch_size,
@@ -122,13 +122,13 @@ class Embeddings(nn.Module):
     def forward(self, x):
         x = self.patch_embeddings(x)  # (B, hidden. n_patches^(1/2), n_patches^(1/2))#n*2048*32*32
         #print(x.shape)
-        x = x.flatten(2)#n*1024*2*2
+        x = x.flatten(2)#n,1024,2*2
         #print(x.shape)#n*1024*4
         b = self.position_embeddings
 
         x = x.transpose(-1, -2)  # (B, n_patches, hidden)
         #print(x.shape)  # n*4*1024
-        print(b.shape)  #1*4*1024
+        #print(b.shape)  #1*4*1024
         embeddings = x + b
         embeddings = self.dropout(embeddings)
         return embeddings

@@ -1,55 +1,30 @@
-# -*- coding: utf-8 -*-
-"""
-@author: LiuXin
-@contact: xinliu1996@163.com
-@Created on: DATE{TIME}
-"""
-from __future__ import print_function, division
 import os
-from PIL import Image
+import random
+import h5py
 import numpy as np
 import torch
+from PIL import Image
+from scipy import ndimage
+from scipy.ndimage.interpolation import zoom
 from torch.utils.data import Dataset
-from mypath import Path
 from torchvision import transforms
 from dataloader.transforms_utils import custom_transforms as tr
-from dataloader.transforms_utils import augment as au
-from dataloader.transforms_utils import meta_transforms as meta_t
+from mypath import Path
 
-class SkmtDataSet(Dataset):
-    """
-    PascalVoc dataset
-    """
-    CLASSES = ('background', 'SAS', 'LHB', 'D',
-               'HH', 'SUB', 'SUP', 'GL', 'GC',
-               'SCB', 'INF', 'C', 'TM', 'SHB',
-               'LHT', 'SAC', 'INS','BBLH','LHBT')
 
+class Synapse_dataset(Dataset):
+    CLASSES = ('background', '1', '2', '3',
+               '4', '5', '6', '7', '8')
     PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
-               [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],
-               [192, 0, 0], [64, 128, 0]])
+                          [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],])
+    NUM_CLASSES = 9
+    def __init__(self, args,base_dir=Path.db_root_dir('skmt'),split='train'):
 
-    CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
-                          0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
-
-    #TODO:取消未出现的类
-    # NUM_CLASSES = len(CLASSES)
-    NUM_CLASSES = 10
-
-    def __init__(self,
-                 args,
-                 base_dir=Path.db_root_dir('skmt'),
-                 split='train',
-                 ):
-        """
-        :param base_dir: path to VOC dataset directory
-        :param split: train/val
-        :param transform: transform to apply
-        """
-        super().__init__()
         self._base_dir = base_dir
+        self.args = args
         self._image_dir = os.path.join(self._base_dir, 'JPEGImages')
         self._cat_dir = os.path.join(self._base_dir, 'SegmentationClass')
+        _splits_dir = os.path.join(self._base_dir, 'ImageSets')
 
         if isinstance(split, str):
             self.split = [split]
@@ -57,13 +32,10 @@ class SkmtDataSet(Dataset):
             split.sort()
             self.split = split
 
-        self.args = args
-
-        _splits_dir = os.path.join(self._base_dir, 'ImageSets')
-
         self.im_ids = []
         self.images = []
         self.categories = []
+
 
         for splt in self.split:
             with open(os.path.join(os.path.join(_splits_dir, splt + '.txt')), "r") as f:
@@ -81,41 +53,23 @@ class SkmtDataSet(Dataset):
 
         assert (len(self.images) == len(self.categories))
 
-        # Display stats
-        print('Number of images in {}: {:d}'.format(split, len(self.images)))
-
     def __len__(self):
         return len(self.images)
 
+    def __getitem__(self, idx):
+        image = Image.open(self.images[idx]).convert('RGB')
+        label = Image.open(self.categories[idx])
 
-    def __getitem__(self, index):
-        _img, _target = self._make_img_gt_point_pair(index)
-        _section=self.get_section(index)
-
-        sample = {'image': _img, 'label': _target,'section':_section}
-
+        sample = {'image': image, 'label': label}
         for split in self.split:
             if split == "train":
                 return self.transform_tr(sample)
             elif split == 'val':
                 return self.transform_val(sample)
+        return sample
 
-    def get_section(self,index):
-        _name = self.images[index].split('/')[-1]
-        _section = _name.split('_')[0][-2]
-        return int(_section)
-
-
-
-    def _make_img_gt_point_pair(self, index):
-        _img = Image.open(self.images[index]).convert('RGB')
-        _target = Image.open(self.categories[index])
-
-        return _img, _target
 
     def transform_tr(self, sample):
-        augm = au.Augment()
-        sample = augm(sample)
         composed_transforms = transforms.Compose([
             #tr.RandomHorizontalFlip(),
             # tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
@@ -186,10 +140,4 @@ class SkmtDataSet(Dataset):
         return rgb
 
     def __str__(self):
-        return 'skmt(split=' + str(self.split) + ')'
-
-
-
-
-
-
+        return 'synapse(split=' + str(self.sample_list) + ')'

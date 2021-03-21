@@ -17,13 +17,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import pandas as pd
 from criterion import build_criterion
+from dataloader.synapse import Synapse_dataset
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
 
 from tools.train import Trainer
 from tools.test import Tester
-
 from dataloader.skmt import SkmtDataSet
 from modeling import build_skmtnet
 
@@ -38,8 +38,8 @@ def main(args,logger,summary):
     random.seed(seed)  # python random seed
     np.random.seed(seed)  # set numpy random seed
     torch.manual_seed(seed)  # set random seed for cpu
-
-
+    #train_set =Synapse_dataset(args,split='train')
+    #val_set = Synapse_dataset(args, split='val')
     train_set = SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
@@ -203,7 +203,3 @@ if __name__ == '__main__':
     end = timeit.default_timer()
     logger.info("training time:{:.4f}".format(1.0 * (end - start) / 3600))
     logger.info('model save in {}.'.format(run_id))
-
-
-
-
