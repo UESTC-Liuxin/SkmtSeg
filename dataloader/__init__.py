@@ -2,9 +2,9 @@
 """
 @description:
 
-@author: LiuXin
-@contact: xinliu1996@163.com
-@Created on: 2020/11/1 下午9:23
+@author: Maglan
+@contact: maglanyulan@163.com
+@Created on: 2021/4/11 下午4:22
 """
 from dataloader.callosum import CallDataSet
 from dataloader.skmt import SkmtDataSet
