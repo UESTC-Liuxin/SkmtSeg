@@ -130,9 +130,8 @@ def SegSkmt(args):
 
 def uzip_model(args):
     # 在torch 1.6版本中重新加载一下网络参数
-
     model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes, output_stride=16)
+                          num_classes=args.num_classes, output_stride=16, img_size=args.crop_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = nn.DataParallel(model)
     model.to(device)
