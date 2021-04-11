@@ -13,6 +13,7 @@ from criterion.WCELoss import WCELoss
 from criterion.FocalLoss import FocalLoss
 from criterion.DiceLoss import DiceLoss
 from criterion.IouLoss import IouLoss
+from criterion.LabelSmoothCELoss import LabelSmoothCrossEntropy2D
 from criterion.ComposeLoss import ComposeLoss,CaculateTLoss
 
 
@@ -47,6 +48,8 @@ def build_criterion(auxiliary=None,trunk=None):
     assert len(trunk_losses)==len(trunk_loss_weights)
     trunk_compose=ComposeLoss(trunk_losses,trunk_loss_weights)
 
+
+
     if(auxiliary is not None):
         auxiliary_losses=[]
         for mode,kwargs in auxiliary['losses'].items():
@@ -78,6 +81,8 @@ def build_loss(mode,*args,**kwargs):
         return IouLoss(*args,**kwargs)
     elif(mode=='dice'):
         return DiceLoss(*args,**kwargs)
+    elif(mode=='smoothce'):
+        return LabelSmoothCrossEntropy2D(*args,**kwargs)
     else:
         raise NotImplementedError
 

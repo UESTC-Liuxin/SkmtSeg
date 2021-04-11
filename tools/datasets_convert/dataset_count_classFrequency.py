@@ -12,9 +12,10 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
-dataset_root = '../../data/CAMUS'
+from dataloader.callosum import CallDataSet
+dataset_root = '../../data/Callosum/Callosum'
 images_path = os.path.join(dataset_root, 'SegmentationClass')
-
+CLASSES = CallDataSet.CLASSES
 
 
 def find_pic(img, array_list, pixs,n_class):
@@ -32,27 +33,27 @@ def frequence():
     images_list_path = [os.path.join(images_path, i) for i in os.listdir(images_path)]
     print(len(images_list_path))
 
-    class_pixs = np.zeros(len(SkmtDataSet.CLASSES))
-    clss_n = np.zeros(len(SkmtDataSet.CLASSES))
-    f_class = np.zeros(len(SkmtDataSet.CLASSES))
+    class_pixs = np.zeros(len(CLASSES))
+    clss_n = np.zeros(len(CLASSES))
+    f_class = np.zeros(len(CLASSES))
 
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
         img = cv2.imread(image_path)
         #print(img.)
-        for h in range(0, img.shape[0]):
-            for w in range(0, img.shape[1]):
-                (b,g,r) = img[h,w]
-                if (b,g,r) != (0, 0, 0):  
-                    print((b,g,r))
-        for ii, label in enumerate(SkmtDataSet.CLASSES):
+        # for h in range(0, img.shape[0]):
+        #     for w in range(0, img.shape[1]):
+        #         (b,g,r) = img[h,w]
+        #         if (b,g,r) != (0, 0, 0):
+        #             print((b,g,r))
+        for ii, label in enumerate(CLASSES):
             #if ii != 0:
             class_pixs[ii], clss_n[ii] = find_pic(img, [ii,ii,ii], class_pixs[ii], clss_n[ii])
     all_class = np.sum(clss_n)
-    for ii, label in enumerate(SkmtDataSet.CLASSES):
+    for ii, label in enumerate(CLASSES):
         f_class[ii] = compute_class(all_class,clss_n[ii])
 
-    for ii, label in enumerate(SkmtDataSet.CLASSES):
+    for ii, label in enumerate(CLASSES):
         print('{}: pixs:{:.0f} num:{:.0f}  frequent:{:.2f}'.format(label,class_pixs[ii], clss_n[ii],f_class[ii]))
     f_class_median = np.median(np.array(f_class))
     print(f_class_median)

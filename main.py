@@ -17,6 +17,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import pandas as pd
 from criterion import build_criterion
+from dataloader.callosum import CallDataSet
+from dataloader.camus import CamusSet
 from dataloader.synapse import Synapse_dataset
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
@@ -40,8 +42,10 @@ def main(args,logger,summary):
     torch.manual_seed(seed)  # set random seed for cpu
     #train_set =Synapse_dataset(args,split='train')
     #val_set = Synapse_dataset(args, split='val')
-    train_set = SkmtDataSet(args,split='train')
-    val_set = SkmtDataSet(args, split='val')
+    train_set = CallDataSet(args, split='train')
+    val_set = CallDataSet(args, split='val')
+    # train_set = SkmtDataSet(args,split='train')
+    # val_set = SkmtDataSet(args, split='val')
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=True, **kwargs)
@@ -72,17 +76,17 @@ def main(args,logger,summary):
         CRITERION = dict(
             auxiliary=dict(
                 losses=dict(
-                    ce=dict(reduction='mean')
-                    # dice=dict(smooth=1, p=2, reduction='mean')
-                ),
-                loss_weights=[1]
-            ),
-            trunk=dict(
-                losses=dict(
                     ce=dict(reduction='mean'),
                     dice=dict(smooth=1, p=2, reduction='mean')
                 ),
-                loss_weights=[0.5,0.5]
+                loss_weights=[0.5, 0.5]
+            ),
+            trunk=dict(
+                losses=dict(
+                    ce=dict(reduction='mean')
+                    #dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[1]
             )
         )
     else:
@@ -154,7 +158,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
 
-    parser.add_argument('--model', default='skmtnet', type=str)
+    parser.add_argument('--model', default='callonet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--backbone', default=None, type=str)

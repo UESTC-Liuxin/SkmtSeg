@@ -34,7 +34,7 @@ class SkmtDataSet(Dataset):
 
     #TODO:取消未出现的类
     # NUM_CLASSES = len(CLASSES)
-    NUM_CLASSES = 10
+    NUM_CLASSES = 11
 
     def __init__(self,
                  args,
@@ -72,7 +72,8 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
-                # print(_image)
+                print(_image)
+                print(_cat)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)

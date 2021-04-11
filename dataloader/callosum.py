@@ -16,29 +16,23 @@ from dataloader.transforms_utils import custom_transforms as tr
 from dataloader.transforms_utils import augment as au
 from dataloader.transforms_utils import meta_transforms as meta_t
 
-class CamusSet(Dataset):
+class CallDataSet(Dataset):
     """
     PascalVoc dataset
     """
-    CLASSES = ('background', 'SAS', 'LHB', 'D',
-               'HH', 'SUB', 'SUP', 'GL', 'GC',
-               'SCB', 'INF', 'C', 'TM', 'SHB',
-               'LHT', 'SAC', 'INS','BBLH','LHBT')
+    CLASSES = ('background', 'CSP', 'callosum')
 
-    PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
-               [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],
-               [192, 0, 0], [64, 128, 0]])
+    PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0]])
 
-    CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
-                          0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
+    CLASSES_PIXS_WEIGHTS = (0.9800,0.0100,0.0100)
 
     #TODO:取消未出现的类
     # NUM_CLASSES = len(CLASSES)
-    NUM_CLASSES = 10
+    NUM_CLASSES = 3
 
     def __init__(self,
                  args,
-                 base_dir=Path.db_root_dir('CAMUS'),
+                 base_dir=Path.db_root_dir('callosum'),
                  split='train',
                  ):
         """
@@ -72,7 +66,6 @@ class CamusSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
-                # print(_image)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)
@@ -90,9 +83,8 @@ class CamusSet(Dataset):
 
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
-        _section=self.get_section(index)
 
-        sample = {'image': _img, 'label': _target,'section':_section}
+        sample = {'image': _img, 'label': _target}
 
         for split in self.split:
             if split == "train":
@@ -100,17 +92,11 @@ class CamusSet(Dataset):
             elif split == 'val':
                 return self.transform_val(sample)
 
-    def get_section(self,index):
-        _name = self.images[index].split('/')[-1]
-        _section = _name.split('_')[0][-2]
-        return int(_section)
-
-
-
     def _make_img_gt_point_pair(self, index):
         _img = Image.open(self.images[index]).convert('RGB')
         _target = Image.open(self.categories[index])
-
+        if _target.mode == "RGB":
+            _target = _target.convert('L')
         return _img, _target
 
     def transform_tr(self, sample):

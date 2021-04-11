@@ -17,8 +17,11 @@ class Synapse_dataset(Dataset):
                '4', '5', '6', '7', '8')
     PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
                           [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],])
+    CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
+                          0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
+
     NUM_CLASSES = 9
-    def __init__(self, args,base_dir=Path.db_root_dir('skmt'),split='train'):
+    def __init__(self, args,base_dir=Path.db_root_dir('synapse'),split='train'):
 
         self._base_dir = base_dir
         self.args = args
@@ -66,7 +69,7 @@ class Synapse_dataset(Dataset):
                 return self.transform_tr(sample)
             elif split == 'val':
                 return self.transform_val(sample)
-        return sample
+
 
 
     def transform_tr(self, sample):

@@ -42,4 +42,5 @@ class TransUNet(nn.Module):
         x = self.up3(x, x2)
         logits = self.outc(x)
         x = F.interpolate(logits, scale_factor=2, mode='bilinear', align_corners=True)
+
         return x

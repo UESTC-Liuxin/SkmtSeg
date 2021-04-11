@@ -13,8 +13,9 @@ class Path(object):
         if dataset == 'pascal':
             return '/media/Program/CV/dataset/VOCdevkit/'  # folder that contains VOCdevkit/.
         elif dataset == 'skmt':
-            return 'data/Synapse/'
-            #return 'data/SKMT/Seg/'
+            return 'data/SKMT/Seg/'
+        elif dataset == 'callosum':
+            return 'data/Callosum/Callosum/'
         elif dataset == 'synapse':
             return 'data/Synapse/'
         elif dataset == 'CAMUS':
