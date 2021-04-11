@@ -75,7 +75,8 @@ def main(args,logger,summary):
             ),
             trunk=dict(
                 losses=dict(
-                    ce=dict(reduction='mean')
+                    #ce=dict(reduction='mean'),
+                    focal = dict(reduction='mean')
                     #dice=dict(smooth=1, p=2, reduction='mean')
                 ),
                 loss_weights=[1]
@@ -150,7 +151,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
     parser.add_argument('--model', default='skmtnet', type=str)
-    parser.add_argument('--dataset', default='skmt', type=str)
+    parser.add_argument('--dataset', default='call', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--backbone', default=None, type=str)

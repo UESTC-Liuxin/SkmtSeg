@@ -45,8 +45,8 @@ def build_criterion(auxiliary=None,trunk=None):
         trunk_losses.append(build_loss(mode=mode, **kwargs))
 
     trunk_loss_weights = trunk['loss_weights']
-    assert len(trunk_losses)==len(trunk_loss_weights)
-    trunk_compose=ComposeLoss(trunk_losses,trunk_loss_weights)
+    assert len(trunk_losses) == len(trunk_loss_weights)
+    trunk_compose = ComposeLoss(trunk_losses,trunk_loss_weights)
 
 
 
