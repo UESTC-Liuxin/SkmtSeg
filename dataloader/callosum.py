@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-@author: LiuXin
-@contact: xinliu1996@163.com
-@Created on: DATE{TIME}
+@author: Maglan
+@contact: maglanyulan@163.com
+@Created on: 2021/4/09 下午4:20
 """
 from __future__ import print_function, division
 import os

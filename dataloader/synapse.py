@@ -1,3 +1,8 @@
+"""
+@author: Maglan
+@contact: maglanyulan@163.com
+@Created on: DATE{TIME}
+"""
 import os
 import random
 import h5py

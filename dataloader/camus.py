@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: LiuXin
-@contact: xinliu1996@163.com
+@author: Maglan
+@contact: maglanyulan@163.com
 @Created on: DATE{TIME}
 """
 from __future__ import print_function, division
