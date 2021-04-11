@@ -88,7 +88,7 @@ class Inferencer(object):
 def SegSkmt(args):
     # build model
     model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes, output_stride=16)
+                          num_classes=args.num_classes, output_stride=16, img_size=args.crop_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
