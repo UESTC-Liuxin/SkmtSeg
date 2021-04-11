@@ -17,16 +17,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import pandas as pd
 from criterion import build_criterion
-from dataloader.callosum import CallDataSet
-from dataloader.camus import CamusSet
-from dataloader.synapse import Synapse_dataset
+from dataloader import build_dataset
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
 
 from tools.train import Trainer
 from tools.test import Tester
-from dataloader.skmt import SkmtDataSet
 from modeling import build_skmtnet
 
 def main(args,logger,summary):
@@ -40,12 +37,7 @@ def main(args,logger,summary):
     random.seed(seed)  # python random seed
     np.random.seed(seed)  # set numpy random seed
     torch.manual_seed(seed)  # set random seed for cpu
-    #train_set =Synapse_dataset(args,split='train')
-    #val_set = Synapse_dataset(args, split='val')
-    train_set = CallDataSet(args, split='train')
-    val_set = CallDataSet(args, split='val')
-    # train_set = SkmtDataSet(args,split='train')
-    # val_set = SkmtDataSet(args, split='val')
+    train_set, val_set =build_dataset(args)
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=True, **kwargs)
@@ -157,8 +149,8 @@ if __name__ == '__main__':
     start = timeit.default_timer()
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
-
-    parser.add_argument('--model', default='callonet', type=str)
+    parser.add_argument('--model', default='skmtnet', type=str)
+    parser.add_argument('--dataset', default='skmt', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--backbone', default=None, type=str)
