@@ -118,7 +118,7 @@ def SegSkmt(args):
             # img = torch.from_numpy(img).float()
 
             img = torch.unsqueeze(img, dim=0)
-            img =img.to(device)
+            img = img.to(device)
             sample = {'image': img}
             pre = infer.inference(sample)
             post = postprocess(pre, args.num_classes)

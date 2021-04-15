@@ -36,8 +36,8 @@ class Trainer(object):
         self.criterion=criterion
         self.optimizer=optimizer
         self.start_epoch=0
-        #self.scheduler = LR_Scheduler('step', args.lr, args.max_epochs, len(self.dataloader),
-        #                               lr_step=30)
+        #self.scheduler = LR_Scheduler('poly', args.lr, args.max_epochs, len(self.dataloader),
+        #                              lr_step=30)
         #进行训练恢复
         if(args.resume):
             self.resume()
@@ -129,13 +129,12 @@ class Trainer(object):
                 img = batch['image'][0]  # 每次显示第一张图片
                 gt=np.asarray(gt.cpu(), dtype=np.uint8)
                 img= np.asarray(img.cpu(), dtype=np.uint8)
-                self.visualize(gt,img, pred, epoch*1000+iter,writer,"train")
+                self.visualize(gt, pred, epoch*1000+iter,writer,"train")
 
+        self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch, sum(tloss) / len(tloss)))
+        writer.add_scalar('test/loss_epoch', sum(tloss) / len(tloss), epoch)
 
-        self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
-        writer.add_scalar('train/loss_epoch', sum(tloss)/len(tloss), epoch)
-
-    def visualize(self,gt,img,pred,epoch,writer,title):
+    def visualize(self,gt,pred,epoch,writer,title):
         """
 
         :param input:
@@ -144,12 +143,13 @@ class Trainer(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-        pred=self.dataloader.dataset.decode_segmap(pred)
-        img = np.transpose(img,(1,2, 0))
-
-        self.summary.visualize_image(writer, title + '/img', img, epoch)
-        self.summary.visualize_image(writer,title+'/gt',gt,epoch)
-        self.summary.visualize_image(writer, title+'/pred', pred, epoch)
+        pred = self.dataloader.dataset.decode_segmap(pred)
+        gt = np.array(gt).astype(np.float32).transpose((2, 0, 1))
+        gt = torch.from_numpy(gt).type(torch.FloatTensor)
+        pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
+        pred = torch.from_numpy(pred).type(torch.FloatTensor)
+        img = torch.stack([gt, pred])
+        self.summary.visualize_image(writer, title, img, epoch)
 
 
 

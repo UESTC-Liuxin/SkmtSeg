@@ -11,14 +11,19 @@ images_path = os.path.join(dataset_root, 'SegmentationClass')
 
 def find_pic(img,ii):
     img1 = np.zeros(img.shape, np.uint8)
+    flag = False
     for h in range(0, img.shape[0]):
         for w in range(0, img.shape[1]):
             r = img[h, w]
             if r == ii :
                 img1[h, w] = 255
+                flag = True
             else:
                 img1[h, w] = 0
-    return img1
+    if flag:
+        return img1
+    else:
+        return None
 
 def cnt_area(cnt):
     area = cv2.contourArea(cnt)
@@ -61,27 +66,21 @@ def postprocess(img,classnum):
     img = cv2.copyMakeBorder(img, 50,50,50,50, cv2.BORDER_CONSTANT,value=0)
     h, w = img.shape
     temp = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
-    for ii in range(1,classnum):
+    for ii in range(1,classnum+1):
         img1 = find_pic(img,ii)
-        ret, thresh = cv2.threshold(img1, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        contours.sort(key=cnt_area, reverse=True)
-        # 画出轮廓：temp是黑色幕布，contours是轮廓，-1表示全画，然后是颜色，厚度
-        for c in contours:
-            area = cv2.contourArea(c)
-            if area > 200000:continue
-            # 分别在复制的图像上和白色图像上绘制当前轮廓
-            cv2.drawContours(temp, [c], 0, (ii,ii,ii), thickness=-1)
-            break
+        if img1 is not None:
+            ret, thresh = cv2.threshold(img1, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            contours.sort(key=cnt_area, reverse=True)
+            # 画出轮廓：temp是黑色幕布，contours是轮廓，-1表示全画，然后是颜色，厚度
+            for c in contours:
+                area = cv2.contourArea(c)
+                if area > img.shape[0]*img.shape[1]/2:continue
+                # 分别在复制的图像上和白色图像上绘制当前轮廓
+                cv2.drawContours(temp, [c], 0, (ii,ii,ii), thickness=-1)
+                break
     temp = cv2.cvtColor(temp[50:h, 50:w], cv2.COLOR_BGR2GRAY)
     return temp
-
-def get_section(name):
-    print(name)
-    _name = name.split('/')[-1]
-    _section = _name.split('_')[0][-2]
-    print(_section)
-    return int(_section)
 
 
 

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, gamma=2, alpha=0.25,ignore_index=None, reduction='mean'):
+    def __init__(self, gamma=2, alpha=None,ignore_index=None, reduction='mean'):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
@@ -33,7 +33,7 @@ class FocalLoss(nn.Module):
         pt = torch.exp(logpt)
 
         if self.alpha is not None:
-            print(input.data.type())
+            #print(input.data.type())
             if self.alpha.type() != input.data.type():
                 self.alpha = self.alpha.type_as(input.data)
             at = self.alpha.gather(0, target.data.view(-1))

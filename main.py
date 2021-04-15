@@ -17,7 +17,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import pandas as pd
 from criterion import build_criterion
-from dataloader import build_dataset
+from dataloader import build_dataset, CallDataSet
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
@@ -37,7 +37,7 @@ def main(args,logger,summary):
     random.seed(seed)  # python random seed
     np.random.seed(seed)  # set numpy random seed
     torch.manual_seed(seed)  # set random seed for cpu
-    train_set, val_set =build_dataset(args)
+    train_set, val_set = build_dataset(args)
     kwargs = {'num_workers': args.workers, 'pin_memory': True}
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size, drop_last=True, shuffle=True, **kwargs)
@@ -75,8 +75,8 @@ def main(args,logger,summary):
             ),
             trunk=dict(
                 losses=dict(
-                    #ce=dict(reduction='mean'),
-                    focal = dict(reduction='mean')
+                    ce=dict(reduction='mean')
+                    #focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(CallDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
                     #dice=dict(smooth=1, p=2, reduction='mean')
                 ),
                 loss_weights=[1]
@@ -115,15 +115,12 @@ def main(args,logger,summary):
         trainer.train_one_epoch(epoch,writer,best_mIoU)
 
         if(epoch%args.show_val_interval==0):
-            Acc,mAcc,mIoU,FWIoU,confusion_matrix=tester.test_one_epoch(epoch,writer)
+            Acc,mAcc,mIoU,FWIoU,tb_overall=tester.test_one_epoch(epoch,writer)
 
             new_pred = mIoU
             if new_pred > best_mIoU:
                 best_mIoU = new_pred
-                best_confusion_matrix = confusion_matrix
-                # save the confusion matrix
-                data1 = pd.DataFrame(best_confusion_matrix)
-                data1.to_csv(args.savedir +'confusion_matrix.csv')
+                best_overall = tb_overall
                 # save the model
                 model_file_name = args.savedir + '/best_model.pth'
                 state = {"epoch": epoch + 1,
@@ -132,7 +129,9 @@ def main(args,logger,summary):
                          "criterion": criterion.state_dict()
                          }
                 torch.save(state, model_file_name)
-            logger.info("======>best epoch:")
+            logger.info("======>best overall:")
+            logger.info(best_overall)
+            logger.info("======>best mIoU:")
             logger.info(best_mIoU)
 
     model_file_name = args.savedir + '/resume_model.pth'

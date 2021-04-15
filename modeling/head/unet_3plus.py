@@ -13,7 +13,7 @@ class UNet_3Plus(nn.Module):
     def __init__(self, backbone, BatchNorm, output_stride, num_classes):
         super(UNet_3Plus, self).__init__()
         self.is_deconv = True
-        self.in_channels = in_channels
+        self.in_channels = 3
         self.is_batchnorm = True
         self.feature_scale = 4
 
@@ -180,7 +180,7 @@ class UNet_3Plus(nn.Module):
         self.relu1d_1 = nn.ReLU(inplace=True)
 
         # output
-        self.outconv1 = nn.Conv2d(self.UpChannels, n_classes, 3, padding=1)
+        self.outconv1 = nn.Conv2d(self.UpChannels, num_classes, 3, padding=1)
 
         # initialise weights
         for m in self.modules():
