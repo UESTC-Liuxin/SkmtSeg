@@ -79,7 +79,7 @@ def postprocess(img,classnum):
                 # 分别在复制的图像上和白色图像上绘制当前轮廓
                 cv2.drawContours(temp, [c], 0, (ii,ii,ii), thickness=-1)
                 break
-    temp = cv2.cvtColor(temp[50:h, 50:w], cv2.COLOR_BGR2GRAY)
+    temp = cv2.cvtColor(temp[50:h-50, 50:w-50], cv2.COLOR_BGR2GRAY)
     return temp
 
 
