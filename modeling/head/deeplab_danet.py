@@ -4,12 +4,10 @@ import torch.nn.functional as F
 from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from modeling.model_utils.aspp import build_aspp
 from modeling.model_utils.decoder import build_decoder
-from modeling.backbone import build_backbone
-from modeling.model_utils.da_att import PAM_Module
-from modeling.model_utils.da_att import CAM_Module
 from modeling.model_utils.backbone2head import get_inchannels,get_low_level_feat
 from modeling.head.danet import DANetHead
 
+from modeling.model_utils.non_local_parts import *
 
 class DeepLabDANet(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride,num_classes,freeze_bn=False):
@@ -17,10 +15,9 @@ class DeepLabDANet(nn.Module):
         self.backbone=backbone
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
-        self.output_stride = output_stride
-
         self.backbone = backbone
         in_channels=get_inchannels(self.backbone)[0]
+
         self.head = DANetHead(in_channels, num_classes, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
@@ -29,12 +26,11 @@ class DeepLabDANet(nn.Module):
     def forward(self, inputs):
         x0 = self.head(inputs[0])
         x = self.aspp(inputs[0])
-        low_level_feat=get_low_level_feat(self.backbone)
-
+        low_level_feat=get_low_level_feat(self.backbone,inputs)
         x = self.decoder(x, low_level_feat)
-        x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
+        x0 = F.interpolate(x0, scale_factor=8, mode='bilinear', align_corners=True)
         x = x0+x
-        x = F.interpolate(x, scale_factor=self.output_stride/4, mode='bilinear', align_corners=True)
+        x = F.interpolate(x, scale_factor=self.output_stride/8, mode='bilinear', align_corners=True)
         return x
 
     def freeze_bn(self):

@@ -32,19 +32,37 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
     else:
         BatchNorm=nn.BatchNorm2d
     #选择backbone
-    backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
-
+    if (backbone):
+        backbone_model = build_backbone(backbone, output_stride,BatchNorm,num_classes)
+    else:
+        backbone_model=None
     #选择auxiliary_head
     if(auxiliary_head):
         auxiliary_head_model=build_auxiliary_head(auxiliary_head,backbone,BatchNorm,output_stride,num_classes)
     else:
         auxiliary_head_model=None
 
-    #选择trunk head
-    trunk_head_model= build_head(trunk_head,backbone,BatchNorm,output_stride=output_stride,num_classes=num_classes)
+    # #选择trunk head
+    # trunk_head_model= build_head(trunk_head,backbone,BatchNorm,output_stride=output_stride,num_classes=num_classes)
+    # #集成模型
+    # return SkmtNet(backbone_model,auxiliary_head_model,trunk_head_model,num_classes)
 
-    #集成模型
-    return SkmtNet(backbone_model,auxiliary_head_model,trunk_head_model,num_classes)
+    trunk_head_model1 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride, num_classes=num_classes)
+    trunk_head_model2 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride, num_classes=num_classes)
+    trunk_head_model3 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride, num_classes=num_classes)
+    trunk_head_model4 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride, num_classes=num_classes)
+    trunk_head_model5 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride, num_classes=num_classes)
+
+    return SkmtNet(backbone_model,auxiliary_head_model,
+                   trunk_head_model1,
+                   trunk_head_model2,
+                   trunk_head_model3,
+                   trunk_head_model4,
+                   trunk_head_model5,
+                   num_classes)
+
+
+
 
 class TempBatchNorm(nn.Module):
     def __init__(self,temp):
@@ -56,7 +74,7 @@ class TempBatchNorm(nn.Module):
 
 if __name__ =="__main__":
     input =torch.Tensor(2,3,512,512).cuda()
-    model=build_skmtnet('resnet50',auxiliary_head='fcn',trunk_head='deeplab_danet',
+    model=build_skmtnet('wide_resnet50_2',auxiliary_head='fcn',trunk_head='deeplab_danet',
                         num_classes=11)
     model=model.cuda()
     out=model({'image':input,'section':torch.tensor([5,5])})

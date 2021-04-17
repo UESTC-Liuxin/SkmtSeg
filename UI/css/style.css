@@ -1,0 +1,86 @@
+QPushButton{
+    color:rgb(0, 0, 0);
+    border-radius: 18px;
+    font-size:16px;
+    font-family:微软雅黑;
+    background:#5bbbf3;
+    /* border:1px; */
+}
+QPushButton:hover{
+    background:#6fc6f8;
+}
+QPushButton:pressed{
+    background:#6fc6f8;
+}
+
+QComboBox {
+    color:rgb(0, 0, 0);
+    border-radius: 18px;
+    font-size:16px;
+    font-family:微软雅黑;
+    background:#5bbbf3;
+    border:1px; 
+}
+
+QComboBox:pressed{
+    background:#6fc6f8;
+}
+
+QComboBox::drop-down{
+    width: 25px;
+    border: none;
+    background: transparent;
+}
+
+QPushButton#closeWindow{
+    background:#CE0000;
+    color:white;
+    border: 2px solid #ffffff;
+    font-size:16px;
+    border-radius: 10px;
+    font-family: 微软雅黑;
+}
+
+QPushButton#closeWindow:hover{
+    background:#FF2D2D;    
+}
+
+QPushButton#closeWindow:pressed{
+    border: 1px solid #3C3C3C!important;
+    background:#AE0000;
+}
+
+QPushButton#minwindow{
+    background:#6C6C6C;
+    color:white;
+    border: 2px solid #ffffff;
+    font-size:16px;
+    border-radius: 10px;
+    font-family: 微软雅黑;
+}
+
+QPushButton#minwindow:hover{
+    background:#9D9D9D;    
+}
+
+QPushButton#minwindow:pressed{
+    border: 1px solid #3C3C3C!important;
+    background:#AE0000;
+}
+
+
+QLabel#image{
+    background:#ffffff; 
+}
+
+QLineEdit{
+    background:#e5f509;
+}
+QGroupBox{
+    border:1px solid rgb(49, 160, 235);
+    border-radius: 20px;
+}
+QRadioButton{
+    color:#656ffa; 
+    
+}

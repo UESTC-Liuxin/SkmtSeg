@@ -6,6 +6,8 @@
 @contact: xinliu1996@163.com
 @Created on: 2020/11/19 上午11:28
 """
+import sys
+sys.path.append(".")
 import argparse
 import time
 import numpy as np
@@ -16,6 +18,8 @@ from tqdm import tqdm
 import PIL.Image as Image
 from modeling import build_skmtnet
 import os
+import skimage
+from tools.postprocess import postprocess, decode_segmap
 
 
 class Inferencer(object):
@@ -46,16 +50,17 @@ class Inferencer(object):
             cuda_tensors[key] = value
         return cuda_tensors
 
-    def inference(self, img):
+    def inference(self, input):
         """
 
         :param epoch:
         :return:
         """
         with torch.no_grad():
-            img = self.dict_to_cuda(img)
-            output = self.model(img)
-            pred = np.asarray(np.argmax(output['out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+            input = self.dict_to_cuda(input)
+            output = self.model(input)
+            pred = np.asarray(np.argmax(output['trunk_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+        return pred
 
     def save(self, mask, name):
         """
@@ -64,9 +69,9 @@ class Inferencer(object):
         :param name:
         :return:
         """
-        pred = self.dataloader.dataset.decode_segmap(mask)
-        img = Image.fromarray(pred)
-        img.save(os.path.join("results", name))
+        pred = decode_segmap(mask)
+        pred = Image.fromarray(skimage.util.img_as_ubyte(pred))
+        pred.save(os.path.join(args.savedir, name))
 
     def visualize(self, gt, pred, epoch, writer, title):
         """
@@ -90,10 +95,10 @@ def SegSkmt(args):
 
     checkpoint = torch.load(args.model)
     print("loading model...........")
-    model = model.load_state_dict(checkpoint)
+    model.load_state_dict(checkpoint["model"])
     infer = Inferencer(args, model)
-
     transform = T.Compose([
+        T.Resize([args.crop_size,args.crop_size]),
         T.ToTensor(),
         T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     ])
@@ -101,13 +106,19 @@ def SegSkmt(args):
     start_time = time.time()
     if (os.path.isfile(args.imgs_path)):
         img = Image.open(args.imgs_path)
-        img = transform(img).unsquzee(0).to(device)
-        infer.inference(img)
+        img = transform(img)
+        img = torch.unsqueeze(img, dim=0).to(device)
+        section = np.array([5])
+        input = {'image': img, 'section': section}
+        pre = infer.inference(input)
+        post = postprocess(pre, args.num_classes)
+        #infer.save(post, 'test.jpg')
     else:
         files = os.listdir(args.imgs_path)
         for i, img_name in enumerate(tqdm(files)):
             img = Image.open(img_name)
-            img = transform(img).unsquzee(0).to(device)
+            img = transform(img)
+            img = torch.unsqueeze(img, dim=0).to(device)
             infer.inference(img)
     end_time = time.time()
     cost_time = end_time - start_time
@@ -134,13 +145,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
 
-    parser.add_argument('--model', default='checkpoints/model.pth', type=str)
-    parser.add_argument('--imgs_path', default='data/SKMT/Seg/JPEGImages', type=str)
-    parser.add_argument('--num_classes', default=19, type=int)
-    parser.add_argument('--auxiliary', default=None, type=str)
-    parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--model', default='checkpoints/best_model.pth', type=str)
+    parser.add_argument('--imgs_path', default='./data/SKMT/Seg/JPEGImages/Shoulder51_200720_16.jpg', type=str)
+    parser.add_argument('--num_classes', default=11, type=int)
+    parser.add_argument('--auxiliary', default='fcn', type=str)
+    parser.add_argument('--trunk_head', default='deeplab_danet', type=str)
     parser.add_argument('--savedir', default="./results", help="directory to save the model snapshot")
     parser.add_argument('--gpus', type=str, default='0')
+    parser.add_argument('--crop_size', type=int, default=512)
+
 
     args = parser.parse_args()
 

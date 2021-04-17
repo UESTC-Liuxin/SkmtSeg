@@ -13,11 +13,16 @@ import torch.nn as nn
 
 
 class SkmtNet(nn.Module):
-    def __init__(self, backbone,auxiliary,trunk,num_classes):
+    def __init__(self, backbone,auxiliary,trunk1,trunk2,trunk3,trunk4,trunk5,num_classes):
         super(SkmtNet, self).__init__()
         self.backbone=backbone
         self.auxiliary=auxiliary
-        self.trunk=trunk
+        self.trunk1= trunk1
+        self.trunk2= trunk2
+        self.trunk3= trunk3
+        self.trunk4= trunk4
+        self.trunk5 = trunk5
+        self.trunks= [self.trunk1,self.trunk2,self.trunk3,self.trunk4,self.trunk5]
         self.num_classes=num_classes
 
     def section_to_trunk(self,section):
@@ -43,9 +48,9 @@ class SkmtNet(nn.Module):
         base_out=self.backbone(img)
         index=self.section_to_trunk(sections[0])
         #选择trunk
-        trunk_out_section = self.trunk(base_out,index)
+        trunk_out_section = self.trunks[index](base_out)
         if(self.auxiliary):
-            auxiliary_out=self.auxiliary(base_out)
+            auxiliary_out = self.auxiliary(base_out)
         else:
             auxiliary_out=None
         return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out_section}
