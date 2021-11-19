@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
 
-dataset_root = '../data/CAMUS'
-images_path = os.path.join(dataset_root, 'SegmentationClass')
-
+dataset_root = './'
+images_path = './seg'
+#os.path.join(dataset_root, 'seg')
+save_path = './sav_seg'
 def find_pic(img,ii):
     img1 = np.zeros(img.shape, np.uint8)
     flag = False
@@ -89,22 +90,24 @@ if __name__ == '__main__':
     print(len(images_list_path))
     for count, image_path in enumerate(images_list_path):
         print('{}image'.format(count))
+        print(image_path)
         img = cv2.imread(image_path)
         # get_section(image_path)
         #img = encode_segmap(img)
         #print(img.mode)
+        image_name = image_path.split("/")[-1].split(".")[-2]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img1 = decode_segmap(img)
 
         img1 = Image.fromarray(np.uint8(img1))
-        img1.save(os.path.join(dataset_root, str(count) + '.png'))
+        img1.save(os.path.join('./sav_seg', image_name+'_n.png'))
 
-        temp = postprocess(img, 11)
-        temp = decode_segmap(temp)
-        temp = Image.fromarray(np.uint8(temp))
-        #temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
-
-        temp.save(os.path.join(dataset_root, str(count) + '_new.png'))
+        # temp = postprocess(img, 11)
+        # temp = decode_segmap(temp)
+        # temp = Image.fromarray(np.uint8(temp))
+        # #temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+        #
+        # temp.save(os.path.join(dataset_root, str(count) + '_new.png'))
 
 
 

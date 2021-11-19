@@ -113,7 +113,8 @@ def SegSkmt(args):
         for i, img_name in enumerate(tqdm(files)):
             img = Image.open(os.path.join(args.imgs_path, img_name)).convert('RGB')
             img = transform(img)
-
+            img_sp=img_name.split(".")[0]
+            img_pre=img_sp+"_pre.jpg"
             # img = np.array(img).astype(np.float32).transpose((2, 0, 1))
             # img = torch.from_numpy(img).float()
 
@@ -122,7 +123,8 @@ def SegSkmt(args):
             sample = {'image': img}
             pre = infer.inference(sample)
             post = postprocess(pre, args.num_classes)
-            infer.save(post,img_name)
+            infer.save(pre,img_name)
+            infer.save(post, img_pre)
     end_time = time.time()
     cost_time = end_time - start_time
     print("finish it,cost ：%.8s s" % cost_time)
@@ -159,8 +161,8 @@ if __name__ == "__main__":
     import timeit
     start = timeit.default_timer()
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
-    parser.add_argument('--model', default='../checkpoints/best_model.pth', type=str)
-    parser.add_argument('--imgs_path', default='../data/SKMT/Seg/JPEGImages', type=str)
+    parser.add_argument('--model', default='./checkpoints/best_model.pth', type=str)
+    parser.add_argument('--imgs_path', default='img', type=str)
     parser.add_argument('--crop_size', default=512, type=int)
     parser.add_argument('--num_classes', default=11, type=int)
     parser.add_argument('--auxiliary', default='fcn', type=str)

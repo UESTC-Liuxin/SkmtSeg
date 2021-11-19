@@ -126,15 +126,15 @@ class Trainer(object):
             if (iter % self.args.show_interval == 0):
                 pred=np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
                 gt = batch['label'][0]  #每次显示第一张图片
-                img = batch['image'][0]  # 每次显示第一张图片
+                img = batch['realImg'][0]
                 gt=np.asarray(gt.cpu(), dtype=np.uint8)
                 img= np.asarray(img.cpu(), dtype=np.uint8)
-                self.visualize(gt, pred, epoch*1000+iter,writer,"train")
+                self.visualize(img,gt, pred, epoch*1000+iter,writer,"train")
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch, sum(tloss) / len(tloss)))
-        writer.add_scalar('test/loss_epoch', sum(tloss) / len(tloss), epoch)
+        writer.add_scalar('train/loss_epoch', sum(tloss) / len(tloss), epoch)
 
-    def visualize(self,gt,pred,epoch,writer,title):
+    def visualize(self,img,gt,pred,epoch,writer,title):
         """
 
         :param input:
@@ -148,7 +148,10 @@ class Trainer(object):
         gt = torch.from_numpy(gt).type(torch.FloatTensor)
         pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
         pred = torch.from_numpy(pred).type(torch.FloatTensor)
-        img = torch.stack([gt, pred])
+
+        img = img.astype(np.float32).transpose((2, 0, 1))
+        img = torch.from_numpy(img).type(torch.FloatTensor)/255.0
+        img = torch.stack([img,gt, pred])
         self.summary.visualize_image(writer, title, img, epoch)
 
 

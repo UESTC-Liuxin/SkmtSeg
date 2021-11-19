@@ -91,9 +91,10 @@ class Tester(object):
                 tloss.append(loss.item())
                 pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
+                img = batch['realImg'][0]
+                img= np.asarray(img.cpu(), dtype=np.uint8)
 
-
-                self.visualize(gt, pred, iter, writer,"test")
+                self.visualize(img,gt, pred, iter, writer,"test")
                 self.evaluator.add_batch(gt, pred)
 
 
@@ -111,6 +112,7 @@ class Tester(object):
         FWIoU = np.around(self.evaluator.Frequency_Weighted_Intersection_over_Union(),decimals=3)
         acc_cls = np.around(self.evaluator.Acc_Class(),decimals=3)
         iou_cls =  np.around(self.evaluator.IoU_Class(),decimals=3)
+        confusion_matrix = np.around(self.evaluator.confusion_matrix, decimals=3)
 
         #Print info
         tb_overall.field_names = ["epoch","Acc", "mAcc", "mIoU", "FWIoU"]
@@ -123,13 +125,13 @@ class Tester(object):
         self.logger.info(tb_cls)
 
 
-        return Acc,mAcc,mIoU,FWIoU,tb_overall
+        return Acc,mAcc,mIoU,FWIoU,tb_overall,confusion_matrix
 
 
 
 
 
-    def visualize(self,gt,pred,epoch,writer,title):
+    def visualize(self,img,gt,pred,epoch,writer,title):
         """
 
         :param input:
@@ -143,7 +145,10 @@ class Tester(object):
         gt = torch.from_numpy(gt).type(torch.FloatTensor)
         pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
         pred = torch.from_numpy(pred).type(torch.FloatTensor)
-        img = torch.stack([gt, pred])
+
+        img = img.astype(np.float32).transpose((2, 0, 1))
+        img = torch.from_numpy(img).type(torch.FloatTensor)/255.0
+        img = torch.stack([img,gt, pred])
         self.summary.visualize_image(writer, title, img, epoch)
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题
