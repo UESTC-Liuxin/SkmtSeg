@@ -1,22 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-@description:
-
-@author: LiuXin
-@contact: xinliu1996@163.com
-@Created on: 2020/11/2 上午11:12
-"""
-
-# -*- coding: utf-8 -*-
 
 import time
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from metrics.metrics import runningScore, averageMeter
+from metrics.metrics import Evaluator
 from tqdm import tqdm
-
+from prettytable import PrettyTable
 
 
 class Tester(object):
@@ -24,7 +14,6 @@ class Tester(object):
     def __init__(self,args,dataloader:DataLoader,model:nn.Module,
                  criterion,logger,summary=None):
         """
-
         :param args:
         :param dataloader:
         :param model:
@@ -40,7 +29,8 @@ class Tester(object):
         self.summary=summary
         self.criterion=criterion
 
-        self.running_Metrics = runningScore(args.num_classes)
+        # Define Evaluator
+        self.evaluator = Evaluator(args.num_classes)
 
     def dict_to_cuda(self,tensors):
         cuda_tensors={}
@@ -60,70 +50,84 @@ class Tester(object):
 
     def test_one_epoch(self,epoch,writer):
         """
-
         :param epoch:
         :return:
         """
         self.model.eval()
         total_batches = len(self.dataloader)
-
+        self.evaluator.reset()
+        section_acc = 0
         tloss = []
-        section_acc=0
-
         with torch.no_grad():
             pbar = tqdm(self.dataloader, ncols=100)
             for iter, batch in enumerate(pbar):
-                name=batch[1]
-                batch=batch[0]
-
+                name = batch[1]
+                batch = batch[0]
                 pbar.set_description("Testing Processing epoach:{}".format(epoch))
                 start_time = time.time()
 
                 batch = self.dict_to_cuda(batch)
                 output = self.model(batch)
                 loss = self.criterion(output, batch).cuda()
-
                 tloss.append(loss.item())
 
+                pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
                 gt=np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
-                pred = np.asarray(np.argmax(output['trunk_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
 
-                #计算section准确的个数
-                section_gt=np.array(batch['section'].cpu().detach().squeeze(0),dtype=np.uint8)
-                section_pred=np.asarray(np.argmax(output['section_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+                # 计算section准确的个数
+                section_gt = np.array(batch['section'].cpu().detach().squeeze(0), dtype=np.uint8)
+                section_pred = np.asarray(np.argmax(output['section_out'].squeeze(0).cpu().detach(), axis=0),
+                                          dtype=np.uint8)
+                self.evaluator.add_batch(gt, pred)
                 # print(section_gt,output['section_out'].squeeze(0),name)
-
-
-                section_acc=(section_gt==section_pred).sum()+section_acc
-                self.running_Metrics.update(gt, pred)
-                self.visualize(gt, pred, iter, writer,"test")
+                section_acc = (section_gt == section_pred).sum() + section_acc
+                self.visualize(gt, pred, iter, writer, "test")
 
         writer.add_scalar('test/section_acc', section_acc / len(self.dataloader.dataset), epoch)
         self.logger.info('======>epoch:{}---loss:{:.3f}---section_acc:{:.3f}'.
-                         format(epoch,sum(tloss)/len(tloss),section_acc / len(self.dataloader.dataset)))
-        writer.add_scalar('test/loss_epoch', sum(tloss)/len(tloss), epoch)
-        score, class_iou, class_acc,class_F1 = self.running_Metrics.get_scores()
-        self.running_Metrics.reset()
+                         format(epoch, sum(tloss) / len(tloss), section_acc / len(self.dataloader.dataset)))
+        writer.add_scalar('test/loss_epoch', sum(tloss) / len(tloss), epoch)
+
+        #add a tabel
+        tb_overall = PrettyTable()
+        tb_cls = PrettyTable()
+        # Fast test during the training
+        Acc = np.around(self.evaluator.Pixel_Accuracy(),decimals=3)
+        mAcc = np.around(self.evaluator.Pixel_Accuracy_Class(),decimals=3)
+        mIoU = np.around(self.evaluator.Mean_Intersection_over_Union(),decimals=3)
+        FWIoU = np.around(self.evaluator.Frequency_Weighted_Intersection_over_Union(),decimals=3)
+        acc_cls = np.around(self.evaluator.Acc_Class(),decimals=3)
+        iou_cls =  np.around(self.evaluator.IoU_Class(),decimals=3)
+
+        #Print info
+        tb_overall.field_names = ["epoch","Acc", "mAcc", "mIoU", "FWIoU","section_acc"]
+        tb_overall.add_row([epoch,Acc, mAcc, mIoU, FWIoU, section_acc / len(self.dataloader.dataset)])
+
+        tb_cls.field_names =['Index']+list(self.dataloader.dataset.CLASSES[:self.args.num_classes])
+        tb_cls.add_row(['acc']+list(acc_cls))
+        tb_cls.add_row(['iou'] + list(iou_cls))
+        self.logger.info(tb_overall)
+        self.logger.info(tb_cls)
 
 
+        return Acc,mAcc,mIoU,FWIoU,tb_overall
 
-        return score, class_iou,class_acc, class_F1
+
 
 
 
     def visualize(self,gt,pred,epoch,writer,title):
         """
-
         :param input:
         :param output:
         :param index:
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
+        pred = self.dataloader.dataset.decode_segmap(pred)
 
-        pred=self.dataloader.dataset.decode_segmap(pred)
-        self.summary.visualize_image(writer,title+'/gt',gt,epoch)
-        self.summary.visualize_image(writer, title+'/pred', pred, epoch)
+        self.summary.visualize_image(writer, title + '/gt', gt, epoch)
+        self.summary.visualize_image(writer, title + '/pred', pred, epoch)
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题
 def visualize(img,tag):
@@ -141,13 +145,3 @@ def visualize(img,tag):
     plt.title(tag)
     plt.imshow(img)
     plt.show()
-
-
-
-
-
-
-
-
-
-
