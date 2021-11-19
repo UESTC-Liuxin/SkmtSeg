@@ -39,7 +39,7 @@ def build_head(head, backbone, BatchNorm, output_stride, num_classes, img_size):
     elif head == "unet_3plus":
         return unet_3plus.UNet_3Plus(backbone, BatchNorm, output_stride, num_classes)
     elif head == "transunet":
-        return transunet.TransUNet(backbone, BatchNorm, output_stride, num_classes, img_size)
+        return transunet.transUnet(backbone, BatchNorm, output_stride, num_classes, img_size)
     elif head == "transfuse":
         return transfuse.TransFuse(backbone, BatchNorm, output_stride, num_classes, img_size)
     else:

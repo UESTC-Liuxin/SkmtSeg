@@ -91,15 +91,19 @@ class SkmtDataSet(Dataset):
 
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
-        _section=self.get_section(index)
 
-        sample = {'image': _img, 'label': _target,'section':_section}
+        _realImg = np.array(_img.resize((self.args.crop_size,self.args.crop_size)))
+        sample = {'image': _img, 'label': _target,'realImg':_realImg}
 
         for split in self.split:
             if split == "train":
-                return self.transform_tr(sample)
+                for key, value in self.transform_tr(sample).items():
+                    sample[key] = value
+                return sample
             elif split == 'val':
-                return self.transform_val(sample)
+                for key, value in self.transform_val(sample).items():
+                    sample[key] = value
+                return sample
 
     def get_section(self,index):
         _name = self.images[index].split('/')[-1]

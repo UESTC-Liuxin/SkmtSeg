@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-GPUS="2"
+GPUS="1"
 export CUDA_VISIBLE_DEVICES=$GPUS
-python main.py --batch_size 4   \
-              --auxiliary "fcn"  \
+python main.py --batch_size 4 \
+              --backbone "resnet50"\
               --trunk_head "dlinknet" \
               --crop_size 512 \
               --image_size 512 \

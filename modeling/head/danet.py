@@ -18,7 +18,7 @@ class DANet(nn.Module):
             raise NotImplementedError
 
         self.head = DANetHead(in_channels, num_classes, BatchNorm)
-        self.output_stride = output_stride
+        self.output_stride = output_stride*2
         if freeze_bn:
             self.freeze_bn()
 

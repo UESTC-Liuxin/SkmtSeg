@@ -17,7 +17,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import pandas as pd
 from criterion import build_criterion
-from dataloader import build_dataset, CallDataSet
+from dataloader import build_dataset, CallDataSet,SkmtDataSet
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
@@ -76,10 +76,11 @@ def main(args,logger,summary):
             trunk=dict(
                 losses=dict(
                     ce=dict(reduction='mean')
-                    #focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(CallDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
-                    #dice=dict(smooth=1, p=2, reduction='mean')
+                    # ,focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
                 ),
-                loss_weights=[1]
+                #loss_weights=[0.34,0.33,0.33]
+                loss_weights=[0.5,0.5]
             )
         )
     else:
@@ -88,7 +89,8 @@ def main(args,logger,summary):
             trunk=dict(
                 losses=dict(
                     ce=dict(reduction='mean')
-                    # dice=dict(smooth=1, p=2, reduction='mean')
+                    #dice=dict(smooth=1, p=2, reduction='mean')
+                    #focal = dict(reduction='mean', alpha=torch.softmax(1 - torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS), dim=0))
                 ),
                 loss_weights=[1]
             )
@@ -103,7 +105,7 @@ def main(args,logger,summary):
 
 
     start_epoch = 0
-    best_mIoU = 0.
+    best_mIoU = 0.0
 
     trainer = Trainer(args=args,dataloader=train_loader,model=model,
                     optimizer=optimizer,criterion=criterion,logger=logger,summary=summary)
@@ -115,12 +117,17 @@ def main(args,logger,summary):
         trainer.train_one_epoch(epoch,writer,best_mIoU)
 
         if(epoch%args.show_val_interval==0):
-            Acc,mAcc,mIoU,FWIoU,tb_overall=tester.test_one_epoch(epoch,writer)
+            Acc,mAcc,mIoU,FWIoU,tb_overall,confusion_matrix=tester.test_one_epoch(epoch,writer)
 
             new_pred = mIoU
             if new_pred > best_mIoU:
                 best_mIoU = new_pred
                 best_overall = tb_overall
+                best_confusion_matrix = confusion_matrix
+                # save the confusion matrix
+                data1 = pd.DataFrame(best_confusion_matrix)
+                data1.to_csv(args.savedir + 'confusion_matrix.csv')
+
                 # save the model
                 model_file_name = args.savedir + '/best_model.pth'
                 state = {"epoch": epoch + 1,
@@ -150,7 +157,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
     parser.add_argument('--model', default='skmtnet', type=str)
-    parser.add_argument('--dataset', default='call', type=str)
+    parser.add_argument('--dataset', default='skmt', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--backbone', default=None, type=str)

@@ -12,9 +12,10 @@ class DLinkNet(nn.Module):
         super(DLinkNet, self).__init__()
         self.backbone = backbone
         self.n_classes = num_classes
-        filters = [64, 256, 512, 2048]
+        filters = [64, 256, 512,1024, 2048]
         self.dblock = Dblock_more_dilate(2048)
 
+        self.decoder5 = DecoderBlock(filters[4], filters[3])
         self.decoder4 = DecoderBlock(filters[3], filters[2])
         self.decoder3 = DecoderBlock(filters[2], filters[1])
         self.decoder2 = DecoderBlock(filters[1], filters[0])
@@ -36,9 +37,11 @@ class DLinkNet(nn.Module):
         e4 = input[0]
         # Center
         e4 = self.dblock(e4)
-
         # Decoder
-        d4 = self.decoder4(e4) + e3
+        d4 = self.decoder5(e4)
+        d5 = self.decoder4(d4)
+
+        d4 =d5  + e3
         d3 = self.decoder3(d4) + e2
         d2 = self.decoder2(d3) + e1
         out = self.finaldeconv1(d2)

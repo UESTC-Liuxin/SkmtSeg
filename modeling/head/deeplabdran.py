@@ -18,7 +18,7 @@ up_kwargs = {'mode': 'bilinear', 'align_corners': True}
 
 
 class DeepDran(nn.Module):
-    def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
+    def   __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepDran, self).__init__( )
         self.backbone = backbone
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)

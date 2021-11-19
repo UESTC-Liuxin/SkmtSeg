@@ -35,7 +35,7 @@ class DeepLabDANet(nn.Module):
         else:
             NotImplementedError
         x = self.decoder(x, low_level_feat)
-        x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
+        x0 = F.interpolate(x0, scale_factor=8, mode='bilinear', align_corners=True)
         x = x0+x
         x = F.interpolate(x, scale_factor=self.output_stride/4, mode='bilinear', align_corners=True)
         return x
