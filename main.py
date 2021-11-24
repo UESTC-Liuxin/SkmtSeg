@@ -33,7 +33,8 @@ def main(args,logger,summary):
     cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
                              # our hardware
 
-    seed = random.randint(1, 10000)
+    seed = 6000
+    #seed =  random.randint(1, 10000)
     logger.info('======>random seed {}'.format(seed))
 
     random.seed(seed)  # python random seed
@@ -72,26 +73,39 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-    CRITERION = dict(
-        # auxiliary=dict(
-        #     losses=dict(
-        #         ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-        #         # dice=dict(smooth=1, p=2, reduction='mean')
-        #     ),
-        #     loss_weights=[1]
-        # ),
-
-        trunk=dict(
-            losses=dict(
-                focal=dict(reduction='mean')
-                # ce=dict(reduction='mean')
-                # dice=dict(smooth=1, p=2, reduction='mean')
+    if (args.auxiliary is not None):
+        CRITERION = dict(
+            auxiliary = dict(
+                losses = dict(
+                    ce = dict(reduction='mean'),
+                    dice = dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights = [0.5, 0.5]
             ),
-            loss_weights=[1]
+            trunk = dict(
+                losses = dict(
+                    ce = dict(reduction='mean')
+                    # ,focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
+                    , dice = dict(smooth=1, p=2, reduction='mean')
+                 ),
+                # loss_weights=[1]
+                loss_weights = [0.5, 0.5]
+            )
         )
-    )
+    else:
+        CRITERION = dict(
+            auxiliary = None,
+            trunk = dict(
+                losses = dict(
+                    ce = dict(reduction='mean')
+                    # dice=dict(smooth=1, p=2, reduction='mean')
+                    # focal = dict(reduction='mean', alpha=torch.softmax(1 - torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS), dim=0))
+                ),
+                loss_weights = [1]
+            )
+        )
     criterion = build_criterion(**CRITERION)
-
+    logger.info('======>criterion {}'.format(CRITERION))
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus

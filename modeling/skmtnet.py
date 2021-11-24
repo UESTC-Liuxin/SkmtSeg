@@ -33,18 +33,23 @@ class SkmtNet(nn.Module):
         :param section:
         :return:
         """
-        return section
+        if(section==0 ):
+            index=0
+        elif(section==3 or section==4 or section==1):
+            index=1
+        else:
+            index=2
 
-
-
-
+        # 直接返回实际的切面类型
+        return index
 
     def forward(self, input):
         img = input['image']
         sections= input['section']-1
         base_out=self.backbone(img)
+        index = self.section_to_trunk(sections[0])
         #提取单个batch的相关tensor出来组成新的列表
-        trunk_out=self.trunks[sections[0]](base_out)
+        trunk_out=self.trunks[index](base_out)
         # trunk_out = self.trunk(base_out)
         if(self.auxiliary):
             auxiliary_out=self.auxiliary(base_out)
