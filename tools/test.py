@@ -63,7 +63,6 @@ class Tester(object):
         :return:
         """
         self.model.eval()
-        total_batches = len(self.dataloader)
         self.evaluator.reset()
 
         tloss = []

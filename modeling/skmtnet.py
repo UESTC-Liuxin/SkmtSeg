@@ -40,8 +40,8 @@ class SkmtNet(nn.Module):
         else:
             index=2
 
-        # 直接返回实际的切面类型
-        return index
+
+
 
     def forward(self, input):
         img = input['image']

@@ -9,7 +9,7 @@
 
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 
 class IouLoss(nn.Module):
 
@@ -20,7 +20,7 @@ class IouLoss(nn.Module):
     @staticmethod
     def to_one_hot(tensor, n_classes):
         n, h, w = tensor.size()
-        one_hot = torch.zeros(n, n_classes, h, w).scatter_(1, tensor.view(n, 1, h, w), 1)
+        one_hot = torch.zeros(n, n_classes, h, w).cuda().scatter_(1, tensor.view(n, 1, h, w), 1)
         return one_hot
 
     def forward(self, pred, gt):

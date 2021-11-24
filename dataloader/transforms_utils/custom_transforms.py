@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 @description:
-
 @author: LiuXin
 @contact: xinliu1996@163.com
 @Created on: 2020/11/5 下午2:46
@@ -89,7 +88,10 @@ class RandomGaussianBlur(object):
         if random.random() < 0.5:
             img = img.filter(ImageFilter.GaussianBlur(
                 radius=random.random()))
-
+        import matplotlib.pyplot as plt
+        plt.imshow(img)
+        plt.show()
+        i
         return {'image': img,
                 'label': mask}
 
@@ -136,6 +138,7 @@ class FixScaleCrop(object):
         self.crop_size = crop_size
 
     def __call__(self, sample):
+
         img = sample['image']
         mask = sample['label']
         w, h = img.size
@@ -172,4 +175,3 @@ class FixedResize(object):
 
         return {'image': img,
                 'label': mask}
-

@@ -29,18 +29,15 @@ from dataloader.simplers import CustomRandomSampler, BatchSampler
 from modeling import build_skmtnet
 
 def main(args,logger,summary):
-    cudnn.enabled = True     # Enables bencnmark mode in cudnn, to enable the inbuilt
-    cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
-                             # our hardware
-
-    seed = 6000
-    #seed =  random.randint(1, 10000)
-    logger.info('======>random seed {}'.format(seed))
-
-    random.seed(seed)  # python random seed
-    np.random.seed(seed)  # set numpy random seed
-    torch.manual_seed(seed)  # set random seed for cpu
-
+    seed=6000
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    np.random.seed(seed)  # Numpy module.
+    random.seed(seed)  # Python random module.
+    torch.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
     train_set=SkmtDataSet(args,split='train')
     val_set = SkmtDataSet(args, split='val')
@@ -48,15 +45,19 @@ def main(args,logger,summary):
 
     sampler=CustomRandomSampler(train_set,batch_size=args.batch_size)
     batch_sampler=BatchSampler(sampler)
-    train_loader = DataLoader(train_set, batch_sampler=batch_sampler, **kwargs)
 
-    test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
+    def worker_init_fn(worker_id):
+        np.random.seed(int(seed))
+
+    train_loader = DataLoader(train_set, batch_sampler=batch_sampler,worker_init_fn=worker_init_fn,**kwargs)
+
+    test_loader = DataLoader(val_set, batch_size=1, drop_last=True, worker_init_fn=worker_init_fn,shuffle=False, **kwargs)
 
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes,output_stride = 16)
+    model = build_skmtnet(backbone='wide_resnet50_2',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+                          num_classes=args.num_classes,output_stride = 32)
 
     logger.info("======> computing network parameters")
     total_paramters = netParams(model)
@@ -73,39 +74,26 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-    if (args.auxiliary is not None):
-        CRITERION = dict(
-            auxiliary = dict(
-                losses = dict(
-                    ce = dict(reduction='mean'),
-                    dice = dict(smooth=1, p=2, reduction='mean')
-                ),
-                loss_weights = [0.5, 0.5]
+    CRITERION = dict(
+        # auxiliary=dict(
+        #     losses=dict(
+        #         ce=dict(reduction='mean',weight=SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+        #         # dice=dict(smooth=1, p=2, reduction='mean')
+        #     ),
+        #     loss_weights=[1]
+        # ),
+
+        trunk=dict(
+            losses=dict(
+                focal=dict(reduction='mean')
+                # ce=dict(reduction='mean')
+                # dice=dict(smooth=1, p=2, reduction='mean')
             ),
-            trunk = dict(
-                losses = dict(
-                    ce = dict(reduction='mean')
-                    # ,focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
-                    , dice = dict(smooth=1, p=2, reduction='mean')
-                 ),
-                # loss_weights=[1]
-                loss_weights = [0.5, 0.5]
-            )
+            loss_weights=[1]
         )
-    else:
-        CRITERION = dict(
-            auxiliary = None,
-            trunk = dict(
-                losses = dict(
-                    ce = dict(reduction='mean')
-                    # dice=dict(smooth=1, p=2, reduction='mean')
-                    # focal = dict(reduction='mean', alpha=torch.softmax(1 - torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS), dim=0))
-                ),
-                loss_weights = [1]
-            )
-        )
+    )
     criterion = build_criterion(**CRITERION)
-    logger.info('======>criterion {}'.format(CRITERION))
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
