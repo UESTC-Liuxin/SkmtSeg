@@ -16,12 +16,12 @@ from torch.utils.data import DataLoader
 from metrics.metrics import Evaluator
 from tqdm import tqdm
 from prettytable import PrettyTable
-
+from tools.postprocess import postprocess
 
 class Tester(object):
 
     def __init__(self,args,dataloader:DataLoader,model:nn.Module,
-                 criterion,logger,summary=None):
+                 criterion=None,logger=None,summary=None):
         """
         :param args:
         :param dataloader:
@@ -113,6 +113,41 @@ class Tester(object):
 
         return Acc,mAcc,mIoU,FWIoU,tb_overall
 
+    def test_finally(self):
+        """
+        :param epoch:
+        :return:
+        """
+        with torch.no_grad():
+            pbar = tqdm(self.dataloader, ncols=100)
+            for iter, batch in enumerate(pbar):
+                batch = self.dict_to_cuda(batch)
+                output = self.model(batch)
+                gt = np.asarray(batch['label'].cpu().detach().squeeze(0), dtype=np.uint8)
+                pred = np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
+                post = postprocess(pred, self.args.num_classes)
+                self.evaluator.add_batch(gt, post)
+        # add a tabel
+        tb_overall = PrettyTable()
+        tb_cls = PrettyTable()
+        # Fast test during the training
+        Acc = np.around(self.evaluator.Pixel_Accuracy(), decimals=3)
+        mAcc = np.around(self.evaluator.Pixel_Accuracy_Class(), decimals=3)
+        mIoU = np.around(self.evaluator.Mean_Intersection_over_Union(), decimals=3)
+        FWIoU = np.around(self.evaluator.Frequency_Weighted_Intersection_over_Union(), decimals=3)
+        acc_cls = np.around(self.evaluator.Acc_Class(), decimals=3)
+        iou_cls = np.around(self.evaluator.IoU_Class(), decimals=3)
+
+        # Print info
+        tb_overall.field_names = ["Acc", "mAcc", "mIoU", "FWIoU"]
+        tb_overall.add_row([ Acc, mAcc, mIoU, FWIoU])
+
+        tb_cls.field_names = ['Index'] + list(self.dataloader.dataset.CLASSES[:self.args.num_classes])
+        tb_cls.add_row(['acc'] + list(acc_cls))
+        tb_cls.add_row(['iou'] + list(iou_cls))
+        print(tb_overall)
+        print(tb_cls)
+        return Acc, mAcc, mIoU, FWIoU, tb_overall
 
 
 

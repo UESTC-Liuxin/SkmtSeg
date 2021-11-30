@@ -9,7 +9,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modeling.model_utils.backbone2head import get_inchannels,get_low_level_feat
 
 class AuxiliaryFCN(nn.Module):
 
@@ -17,7 +16,12 @@ class AuxiliaryFCN(nn.Module):
 
         super(AuxiliaryFCN, self).__init__()
 
-        in_channel=get_inchannels(backbone)[1]
+        if(backbone=='mobilenet'):
+            in_channel=320
+        elif(backbone in ["resnet50","resnet101"]):
+            in_channel=1024
+        else:
+            raise ValueError
 
         self.output_stride = output_stride
         self.last_conv = nn.Sequential(nn.Conv2d(in_channel, 256, kernel_size=3, stride=1, padding=1, bias=False),
@@ -32,7 +36,7 @@ class AuxiliaryFCN(nn.Module):
     def forward(self, inputs):
         x = inputs[1]  # 取倒数第二层
         x = self.last_conv(x)
-        x = F.interpolate(x, scale_factor=self.output_stride/2, mode='bilinear', align_corners=True)
+        x = F.interpolate(x, scale_factor=self.output_stride, mode='bilinear', align_corners=True)
 
         return x
 

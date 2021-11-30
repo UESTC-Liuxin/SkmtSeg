@@ -13,7 +13,7 @@ import torch.nn as nn
 
 
 class SkmtNet(nn.Module):
-    def __init__(self, backbone,auxiliary,trunk1,trunk2,trunk3,trunk4,trunk5,num_classes):
+    def __init__(self, backbone,auxiliary,trunk1,trunk2,trunk3,num_classes):
         super(SkmtNet, self).__init__()
         self.backbone=backbone
         self.auxiliary=auxiliary
@@ -21,9 +21,9 @@ class SkmtNet(nn.Module):
         self.trunk1=trunk1
         self.trunk2 = trunk2
         self.trunk3 = trunk3
-        self.trunk4 = trunk4
-        self.trunk5 = trunk5
-        self.trunks=[self.trunk1,self.trunk2,self.trunk3,self.trunk4,self.trunk5]
+        # self.trunk4 = trunk4
+        # self.trunk5 = trunk5
+        self.trunks=[self.trunk1,self.trunk2,self.trunk3]
 
         self.num_classes=num_classes
 
@@ -33,20 +33,24 @@ class SkmtNet(nn.Module):
         :param section:
         :return:
         """
-        if(section==0 ):
+        if(section==1):
             index=0
-        elif(section==3 or section==4 or section==1):
+        elif(section==2):
             index=1
         else:
             index=2
+        return index
 
 
 
 
     def forward(self, input):
         img = input['image']
-        sections= input['section']-1
-        base_out=self.backbone(img)
+        sections= input['section']
+        if self.backbone:
+            base_out=self.backbone(img)
+        else :
+            base_out = img
         index = self.section_to_trunk(sections[0])
         #提取单个batch的相关tensor出来组成新的列表
         trunk_out=self.trunks[index](base_out)

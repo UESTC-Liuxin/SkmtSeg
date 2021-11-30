@@ -6,6 +6,7 @@
 @contact: xinliu1996@163.com
 @Created on: 2020/11/19 上午11:28
 """
+import os,sys
 import argparse
 import time
 import numpy as np
@@ -15,8 +16,10 @@ import torchvision.transforms as T
 from tqdm import tqdm
 import PIL.Image as Image
 from modeling import build_skmtnet
-import os
-
+from tools.postprocess import postprocess
+from dataloader.skmt import SkmtDataSet
+from tools.test import Tester
+from torch.utils.data import DataLoader
 
 class Inferencer(object):
 
@@ -55,7 +58,8 @@ class Inferencer(object):
         with torch.no_grad():
             img = self.dict_to_cuda(img)
             output = self.model(img)
-            pred = np.asarray(np.argmax(output['out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+            pred = np.asarray(np.argmax(output['trunk_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
+        return pred
 
     def save(self, mask, name):
         """
@@ -83,35 +87,45 @@ class Inferencer(object):
 
 def SegSkmt(args):
     # build model
-    model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes, output_stride=16)
+    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+                          num_classes=args.num_classes,output_stride = 16, img_size=512)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     checkpoint = torch.load(args.model)
+
     print("loading model...........")
-    model = model.load_state_dict(checkpoint)
-    infer = Inferencer(args, model)
-
-    transform = T.Compose([
-        T.ToTensor(),
-        T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-    ])
-
-    start_time = time.time()
-    if (os.path.isfile(args.imgs_path)):
-        img = Image.open(args.imgs_path)
-        img = transform(img).unsquzee(0).to(device)
-        infer.inference(img)
-    else:
-        files = os.listdir(args.imgs_path)
-        for i, img_name in enumerate(tqdm(files)):
-            img = Image.open(img_name)
-            img = transform(img).unsquzee(0).to(device)
-            infer.inference(img)
-    end_time = time.time()
-    cost_time = end_time - start_time
-    print("finish it,cost ：%.8s s" % cost_time)
+    model.load_state_dict(checkpoint["model"])
+    model.eval()
+    val_set = SkmtDataSet(args, split='val')
+    kwargs = {'num_workers': 4, 'pin_memory': True}
+    test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
+    tester = Tester(args=args,dataloader=test_loader,model=model)
+    Acc, mAcc, mIoU, FWIoU, tb_overall = tester.test_finally()
+    print(Acc, mAcc, mIoU, FWIoU, tb_overall)
+    # infer = Inferencer(args, model)
+    # transform = T.Compose([
+    #     T.ToTensor(),
+    #     T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    # ])
+    #
+    # start_time = time.time()
+    # if (os.path.isfile(args.imgs_path)):
+    #     img = Image.open(args.imgs_path)
+    #     img = transform(img).unsquzee(0).to(device)
+    #     infer.inference(img)
+    # else:
+    #     files = os.listdir(args.imgs_path)
+    #     for i, img_name in enumerate(tqdm(files)):
+    #         img = Image.open(img_name)
+    #         img = transform(img).unsquzee(0).to(device)
+    #         sample = {'image': img}
+    #         pre = infer.inference(sample)
+    #         post = postprocess(pre, args.num_classes)
+    #         infer.save(post,img_name)
+    # end_time = time.time()
+    # cost_time = end_time - start_time
+    # print("finish it,cost ：%.8s s" % cost_time)
 
 
 def uzip_model(args):
@@ -134,14 +148,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
 
-    parser.add_argument('--model', default='checkpoints/model.pth', type=str)
+    parser.add_argument('--model', default='checkpoints/best_model.pth', type=str)
     parser.add_argument('--imgs_path', default='data/SKMT/Seg/JPEGImages', type=str)
-    parser.add_argument('--num_classes', default=19, type=int)
-    parser.add_argument('--auxiliary', default=None, type=str)
-    parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--num_classes', default=11, type=int)
+    parser.add_argument('--auxiliary', default="fcn", type=str)
+    parser.add_argument('--trunk_head', default='deeplab_danet', type=str)
     parser.add_argument('--savedir', default="./results", help="directory to save the model snapshot")
     parser.add_argument('--gpus', type=str, default='0')
-
+    parser.add_argument('--image_size', default=512, type=int)
+    parser.add_argument('--crop_size', default=512, type=int)
     args = parser.parse_args()
 
     SegSkmt(args, )

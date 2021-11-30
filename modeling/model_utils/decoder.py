@@ -3,12 +3,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
-from modeling.model_utils.backbone2head import get_inchannels
 
 class Decoder(nn.Module):
     def __init__(self, num_classes, backbone, BatchNorm):
         super(Decoder, self).__init__()
-        low_level_inplanes=get_inchannels(backbone)[3]
+        if backbone in ['resnet50','resnet101','drn']:
+            low_level_inplanes = 256
+        elif backbone == 'xception':
+            low_level_inplanes = 128
+        elif backbone == 'mobilenet':
+            low_level_inplanes = 24
+        else:
+            raise NotImplementedError
 
         self.conv1 = nn.Conv2d(low_level_inplanes, 48, 1, bias=False)
         self.bn1 = BatchNorm(48)

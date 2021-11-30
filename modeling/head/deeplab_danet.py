@@ -7,12 +7,11 @@ from modeling.model_utils.decoder import build_decoder
 from modeling.backbone import build_backbone
 from modeling.model_utils.da_att import PAM_Module
 from modeling.model_utils.da_att import CAM_Module
-from modeling.model_utils.backbone2head import get_inchannels,get_low_level_feat
 from modeling.head.danet import DANetHead
 
 
 class DeepLabDANet(nn.Module):
-    def __init__(self, backbone,BatchNorm, output_stride,num_classes,freeze_bn=False):
+    def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepLabDANet, self).__init__()
         self.backbone=backbone
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
@@ -20,7 +19,10 @@ class DeepLabDANet(nn.Module):
         self.output_stride = output_stride
 
         self.backbone = backbone
-        in_channels=get_inchannels(self.backbone)[0]
+        if (backbone in ["resnet50", "resnet101"]):
+            in_channels = 2048
+        else:
+            raise NotImplementedError
         self.head = DANetHead(in_channels, num_classes, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
@@ -29,8 +31,12 @@ class DeepLabDANet(nn.Module):
     def forward(self, inputs):
         x0 = self.head(inputs[0])
         x = self.aspp(inputs[0])
-        low_level_feat=get_low_level_feat(self.backbone)
-
+        if(self.backbone=='xception'):#不同的backbone有不同的输出，处理不同
+            low_level_feat = inputs[1]
+        elif(self.backbone in ['resnet50','resnet101']):
+            low_level_feat = inputs[3]
+        else:
+            NotImplementedError
         x = self.decoder(x, low_level_feat)
         x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
         x = x0+x
