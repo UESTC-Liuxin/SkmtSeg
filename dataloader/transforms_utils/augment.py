@@ -12,10 +12,10 @@ class Augment(object):
         self.seq = iaa.SomeOf(1,[
              iaa.Noop(),
              iaa.Sharpen((0.0, 1.0)),  # sharpen the image
-             iaa.GammaContrast((0.5, 2.0)),  # 对比度增强
-             iaa.BlendAlpha((0.0, 1.0), iaa.HistogramEqualization()),  # 直方图均衡
-             iaa.Affine(rotate=(-20, 20)),  # rotate by -40 to 40 degrees (affects segmaps)
-             iaa.Fliplr(0.5)  # 对百分之五十的图像进行做左右翻
+             # iaa.GammaContrast((0.5, 2.0)),  # 对比度增强
+             # iaa.BlendAlpha((0.0, 1.0), iaa.HistogramEqualization()),  # 直方图均衡
+             # iaa.Affine(rotate=(-20, 20)),  # rotate by -40 to 40 degrees (affects segmaps)
+             # iaa.Fliplr(0.5)  # 对百分之五十的图像进行做左右翻
         ], random_order=True)
 
     def __call__(self, sample):
