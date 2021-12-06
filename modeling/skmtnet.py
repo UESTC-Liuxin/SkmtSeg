@@ -13,17 +13,17 @@ import torch.nn as nn
 
 
 class SkmtNet(nn.Module):
-    def __init__(self, backbone,auxiliary,trunk1,trunk2,trunk3,num_classes):
+    def __init__(self, backbone,auxiliary,trunk1,trunk2,num_classes,trunk3=None):
         super(SkmtNet, self).__init__()
         self.backbone=backbone
         self.auxiliary=auxiliary
         #TODO:修改单个trunk为多个trunk
         self.trunk1=trunk1
         self.trunk2 = trunk2
-        self.trunk3 = trunk3
+        # self.trunk3 = trunk3
         # self.trunk4 = trunk4
         # self.trunk5 = trunk5
-        self.trunks=[self.trunk1,self.trunk2,self.trunk3]
+        self.trunks=[self.trunk1,self.trunk2]
 
         self.num_classes=num_classes
 
@@ -33,12 +33,12 @@ class SkmtNet(nn.Module):
         :param section:
         :return:
         """
-        if(section==1):
+        if(section==2):
             index=0
-        elif(section==2):
-            index=1
+        # elif(section==2):
+        #     index=1
         else:
-            index=2
+            index=1
         return index
 
 
