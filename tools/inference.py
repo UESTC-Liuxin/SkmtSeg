@@ -61,7 +61,7 @@ class Inferencer(object):
             pred = np.asarray(np.argmax(output['trunk_out'].squeeze(0).cpu().detach(), axis=0), dtype=np.uint8)
         return pred
 
-    def save(self, mask, name):
+    def decode(self, mask, name=None):
         """
 
         :param mask:
@@ -70,7 +70,8 @@ class Inferencer(object):
         """
         pred = decode_segmap(mask)
         pred = Image.fromarray(skimage.util.img_as_ubyte(pred))
-        pred.save(os.path.join(args.savedir, name))
+        return pred
+        #pred.save(os.path.join(args.savedir, name))
 
     def visualize(self, gt, pred, epoch, writer, title):
         """
@@ -111,8 +112,8 @@ def SegSkmt(args):
     else:
         files = os.listdir(args.imgs_path)
         for i, img_name in enumerate(tqdm(files)):
-            img = Image.open(os.path.join(args.imgs_path, img_name)).convert('RGB')
-            img = transform(img)
+            img2 = Image.open(os.path.join(args.imgs_path, img_name)).convert('RGB')
+            img = transform(img2)
             img_sp=img_name.split(".")[0]
             img_pre=img_sp+"_pre.jpg"
             # img = np.array(img).astype(np.float32).transpose((2, 0, 1))
@@ -123,8 +124,15 @@ def SegSkmt(args):
             sample = {'image': img}
             pre = infer.inference(sample)
             post = postprocess(pre, args.num_classes)
-            infer.save(pre,img_name)
-            infer.save(post, img_pre)
+
+            rrr = Image.new('RGB', (1536, 512), (0, 255, 0))
+            pre = infer.decode(pre)
+            post = infer.decode(post)
+            rrr.paste(img2,(0, 0))  # 从0，0开始贴图
+            rrr.paste(pre,(512,0))
+            rrr.paste(post, (1024,0))
+
+            rrr.save(os.path.join(args.savedir,img_name))
     end_time = time.time()
     cost_time = end_time - start_time
     print("finish it,cost ：%.8s s" % cost_time)
@@ -161,12 +169,12 @@ if __name__ == "__main__":
     import timeit
     start = timeit.default_timer()
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
-    parser.add_argument('--model', default='./checkpoints/best_model.pth', type=str)
+    parser.add_argument('--model', default='./checkpoints/best_model_1.pth', type=str)
     parser.add_argument('--imgs_path', default='img', type=str)
     parser.add_argument('--crop_size', default=512, type=int)
     parser.add_argument('--num_classes', default=11, type=int)
     parser.add_argument('--auxiliary', default='fcn', type=str)
-    parser.add_argument('--trunk_head', default='deeplab_danet', type=str)
+    parser.add_argument('--trunk_head', default='nonlocalunet', type=str)
     parser.add_argument('--savedir', default="results", help="directory to save the model snapshot")
     parser.add_argument('--gpus', type=str, default='0')
     args = parser.parse_args()
