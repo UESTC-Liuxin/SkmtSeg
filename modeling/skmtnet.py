@@ -10,7 +10,7 @@
 
 import torch
 import torch.nn as nn
-
+from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 
 class SkmtNet(nn.Module):
     def __init__(self, backbone,auxiliary,trunk,num_classes):
@@ -34,7 +34,6 @@ class SkmtNet(nn.Module):
             auxiliary_out=None
 
         return {'auxiliary_out':auxiliary_out,'trunk_out':trunk_out}
-
 
 
 

@@ -122,10 +122,9 @@ class SkmtDataSet(Dataset):
         # augm = au.Augment()
         # sample = augm(sample)
         composed_transforms = transforms.Compose([
-            tr.RandomHorizontalFlip(),#随机水平翻转
+            # tr.RandomHorizontalFlip(),#随机水平翻转
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),#随机裁剪
             tr.FixedResize(self.args.crop_size),
-            tr.RandomGaussianBlur(),#高斯模糊
             #resnet
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             #tr.Normalize(mean=(0.318, 0.318, 0.316), std=(0.114, 0.114, 0.115)),

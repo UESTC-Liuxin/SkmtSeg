@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils.lr_scheduler import LR_Scheduler
-
+import math
 class Trainer(object):
 
     def __init__(self,args,dataloader:DataLoader,model:nn.Module,optimizer,
@@ -55,12 +55,20 @@ class Trainer(object):
         """
         poly learning stategyt
         lr = baselr*(1-iter/max_iter)^power
+        Step mode: ``lr = baselr * 0.1 ^ {floor(epoch-1 / lr_step)}``
+        Cosine mode: ``lr = baselr * 0.5 * (1 + cos(iter/maxiter))``
+        Poly mode: ``lr = baselr * (1 - iter/maxiter) ^ 0.9``
         """
-
         cur_iter = epoch * perEpoch_iter + curEpoch_iter
         max_iter = max_epoch * perEpoch_iter
+        ##poly
         lr = baselr * pow((1 - 1.0 * cur_iter / max_iter), 0.9)
 
+        ##'cos'
+        # lr = 0.5 * baselr * (1 + math.cos(1.0 * cur_iter / max_iter * math.pi))
+
+        ##'step'
+        # lr = baselr * (0.1 ** (epoch // 5))
         # if epoch==5:
         #     lr=3*1e-3
         # elif epoch== 10:
@@ -69,7 +77,7 @@ class Trainer(object):
         #     lr = 5*1e-4
         # else:
         #     lr = 1e-4
-
+        #=['poly', , 'cos'],
         return lr
 
     def dict_to_cuda(self,tensors):
