@@ -53,8 +53,16 @@ def main(args,logger,summary):
     total_paramters = netParams(model)
     logger.info("the number of parameters: " + str(total_paramters))
 
-    # setup optimizer
+    # # setup optimizer
+    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+    # #SGD
+    # optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    # #momentum
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+    # #RMSprop
+    # optimizer = optim.RMSprop(model.parameters(), lr=args.lr, alpha=0.9, weight_decay=args.weight_decay)
+    # #Adam
+    # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.99), weight_decay=args.weight_decay)
 
     # setup savedir
     args.savedir = (args.savedir + '/' + args.model + 'bs'
@@ -171,7 +179,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=5e-4, type=float)
     parser.add_argument('--workers', type=int, default=4, help=" the number of parallel threads")
     parser.add_argument('--show_interval', default=50, type=int)
-    parser.add_argument('--show_val_interval', default=1, type=int)
+    parser.add_argument('--show_val_interval', default=5, type=int)
     parser.add_argument('--savedir', default="./runs", help="directory to save the model snapshot")
     # parser.add_argument('--logFile', default= "log.txt", help = "storing the training and validation logs")
     parser.add_argument('--gpus', type=str, default='0')

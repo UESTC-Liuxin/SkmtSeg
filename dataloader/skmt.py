@@ -72,8 +72,8 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
-                #print(_image)
-                #print(_cat)
+                # print(_image)
+                # print(_cat)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)
@@ -119,8 +119,8 @@ class SkmtDataSet(Dataset):
         return _img, _target
 
     def transform_tr(self, sample):
-        # augm = au.Augment()
-        # sample = augm(sample)
+        augm = au.Augment()
+        sample = augm(sample)
         composed_transforms = transforms.Compose([
             # tr.RandomHorizontalFlip(),#随机水平翻转
             tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),#随机裁剪
