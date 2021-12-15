@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
+from dataloader.transforms_utils import augment as au
 import copy
 dataset_root = '../data/SKMT/Seg'
 images_path = os.path.join(dataset_root, 'JPEGImages')
@@ -49,6 +50,8 @@ def encode_segmap( mask):
 def preprocessing(img,lable):
     # img=cv2.GaussianBlur(img,(5,5),0)
     # mask=np.zeros(img.shape,dtype=np.uint8)
+    augm = au.Augment()
+    # sample = augm(sample)
     ret, binary = cv2.threshold(img, 10, 255, cv2.THRESH_BINARY)  # 二值图
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # 边缘检测函数
     contours.sort(key=lambda c: cv2.contourArea(c), reverse=True)
