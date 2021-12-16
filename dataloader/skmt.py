@@ -13,6 +13,7 @@ from torch.utils.data import Dataset
 from mypath import Path
 from torchvision import transforms
 from dataloader.transforms_utils import custom_transforms as tr
+from dataloader.transforms_utils import augment as au
 from dataloader.transforms_utils import meta_transforms as meta_t
 
 class SkmtDataSet(Dataset):
@@ -71,6 +72,8 @@ class SkmtDataSet(Dataset):
             for ii, line in enumerate(lines):
                 _image = os.path.join(self._image_dir, line + ".jpg")
                 _cat = os.path.join(self._cat_dir, line + ".png")
+                # print(_image)
+                # print(_cat)
                 assert os.path.isfile(_image)
                 assert os.path.isfile(_cat)
                 self.im_ids.append(line)

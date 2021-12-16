@@ -23,9 +23,6 @@ from utils.set_logger import get_logger
 
 from tools.train import Trainer
 from tools.test import Tester
-
-from dataloader.skmt import SkmtDataSet
-from dataloader.simplers import CustomRandomSampler, BatchSampler
 from modeling import build_skmtnet
 
 def main(args,logger,summary):
