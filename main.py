@@ -15,7 +15,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
+import pandas as pd
 from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
@@ -123,12 +123,16 @@ def main(args,logger,summary):
         trainer.train_one_epoch(epoch,writer)
 
         if(epoch%1==0):
-            Acc,mAcc,mIoU,FWIoU,tb_overall=tester.test_one_epoch(epoch,writer)
+            Acc,mAcc,mIoU,FWIoU,tb_overall,confusion_matrix=tester.test_one_epoch(epoch,writer)
 
             new_pred = mIoU
             if new_pred > best_mIoU:
                 best_mIoU = new_pred
                 best_overall =tb_overall
+                best_confusion_matrix = confusion_matrix
+                data1 = pd.DataFrame(best_confusion_matrix)
+                data1.to_csv(args.savedir + 'confusion_matrix.csv')
+
                 # save the model
                 model_file_name = args.savedir + '/best_model.pth'
                 state = {"epoch": epoch + 1,
