@@ -13,11 +13,10 @@ import torch.nn as nn
 class WCELoss(nn.Module):
 
     def __init__(self,weight=None,
-                 #weight=[0.22762148,0.22762148,0.91752577,0.22791293,0.22967742,1.11949686,0.99441341,0.72357724,0.71485944,1,0.71774194],
                  *args,**kwargs):
         super(WCELoss,self).__init__()
         if(weight):
-            weight=1-torch.Tensor(weight).cuda()
+            weight=torch.Tensor(weight).cuda()
         self.loss=nn.CrossEntropyLoss(weight,*args,**kwargs)
 
     def forward(self,logit, target):
