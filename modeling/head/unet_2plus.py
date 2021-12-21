@@ -15,7 +15,7 @@ class  UNet_Nested(nn.Module):
         self.conv1 = nn.Conv2d(2048, 512, 1, bias=False)
         self.output_stride=output_stride
         if output_stride == 16:
-            filters = [32,64, 256, 512, 2048]
+            filters = [32,64, 256, 512, 1024]
 
         elif output_stride == 8:
             filters = [32,64, 256, 512, 2048]
@@ -55,7 +55,7 @@ class  UNet_Nested(nn.Module):
         X_10 = x[5]             # 64*256*256
         X_20 = x[3]             # 256*128*128
         X_30 = x[2]             # 512*64*64
-        X_40 = x[0]             # 2048*32*32
+        X_40 = x[1]             # 2048*32*32
 
         X_01 = self.up_concat01(X_10, X_00)
         X_11 = self.up_concat11(X_20, X_10)

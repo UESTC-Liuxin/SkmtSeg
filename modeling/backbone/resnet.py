@@ -192,18 +192,17 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     #TODO:输出中间的特征图
-    def forward(self, input):
-        x = self.conv1(input)
-        #print(x.size())
-        x0_0 = x =self.bn1(x)
-        x0= x = self.relu(x)
-        x1=x = self.maxpool(x)
-        x2=x = self.layer1(x)
-        x3=x = self.layer2(x)
-        x4=x = self.layer3(x)
-        x5=x=self.layer4(x)
-
-        return (x5,x4,x3,x2,x1,x0,x0_0)
+    def forward(self, input):#512*512*3
+        x = self.conv1(input) #256*256*64
+        # print(x.size())
+        x0_0 = x =self.bn1(x) #
+        x0= x = self.relu(x)#256*256*64
+        x1=x = self.maxpool(x)#128*128*64
+        x2=x = self.layer1(x)#128*128*256
+        x3=x = self.layer2(x)#64*64*512
+        x4=x = self.layer3(x)#32*32*1024
+        x5=x=self.layer4(x) #16*16*2048
+        return (x5,x4,x3,x2,x1,x0,input)
 
 
 def _resnet(arch, block, layers, BatchNorm,pretrained=True,progress=False, **kwargs):

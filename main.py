@@ -31,7 +31,8 @@ def main(args,logger,summary):
     cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
                              # our hardware
 
-    seed = random.randint(1, 10000)
+    # seed = random.randint(1, 10000)
+    seed =920
     logger.info('======>random seed {}'.format(seed))
 
     random.seed(seed)  # python random seed
@@ -54,15 +55,15 @@ def main(args,logger,summary):
     logger.info("the number of parameters: " + str(total_paramters))
 
     # # setup optimizer
-    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
-    # #SGD
-    # optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    # #momentum
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+    # #SGD
+    # optimizer = optim.SGD(model.parameters(), lr=args.lr)
+    # #momentum
+    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
     # #RMSprop
-    # optimizer = optim.RMSprop(model.parameters(), lr=args.lr, alpha=0.9, weight_decay=args.weight_decay)
+    # optimizer = optim.RMSprop(model.parameters(), lr=args.lr, alpha=0.9)
     # #Adam
-    # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.99), weight_decay=args.weight_decay)
+    # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.99))
 
     # setup savedir
     args.savedir = (args.savedir + '/' + args.model + 'bs'
@@ -72,23 +73,27 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
+    weight = [0.22762148, 0.22762148, 0.91752577, 0.22791293, 0.22967742, 1.11949686, 0.99441341, 0.72357724,
+              0.71485944, 1, 0.71774194]
     if(args.auxiliary is not None):
         CRITERION = dict(
             auxiliary=dict(
                 losses=dict(
-                    ce=dict(reduction='mean'),
-                    dice=dict(smooth=1, p=2, reduction='mean')
+                    ce=dict(reduction='mean',weight=weight)
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
                 ),
                 loss_weights=[0.5, 0.5]
+                # loss_weights = [1]
             ),
             trunk=dict(
                 losses=dict(
                     ce=dict(reduction='mean')
                     # ,focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
-                    ,dice=dict(smooth=1, p=2, reduction='mean')
+                    # ,dice=dict(smooth=1, p=2, reduction='mean')
                 ),
                 #loss_weights=[0.34,0.33,0.33]
-                loss_weights=[0.5,0.5]
+                # loss_weights=[0.5,0.5]
+                loss_weights=[1]
             )
         )
     else:
@@ -96,11 +101,11 @@ def main(args,logger,summary):
             auxiliary=None,
             trunk=dict(
                 losses=dict(
-                    ce=dict(reduction='mean')
-                    #dice=dict(smooth=1, p=2, reduction='mean')
-                    #focal = dict(reduction='mean', alpha=torch.softmax(1 - torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS), dim=0))
+                     ce=dict(reduction='mean')
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
+                    ,focal = dict(reduction='mean', alpha=torch.softmax(torch.Tensor(weight), dim=0))
                 ),
-                loss_weights=[1]
+                loss_weights=[0.34,0.33,0.33]
             )
         )
     criterion = build_criterion(**CRITERION)
