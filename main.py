@@ -25,7 +25,7 @@ from utils.set_logger import get_logger
 
 from train import Trainer
 from test import Tester
-
+from criterion import build_criterion
 from dataloader.skmt import SkmtDataSet
 from modeling import build_skmtnet
 
@@ -52,7 +52,7 @@ def main(args,logger,summary):
 
     logger.info('======> building network')
     # set model
-    model = build_skmtnet(backbone='resnet101',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+    model = build_skmtnet(backbone=args.backbone,auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes,output_stride = 16)
 
     logger.info("======> computing network parameters")
@@ -70,7 +70,42 @@ def main(args,logger,summary):
 
     # setup optimization criterion
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
-    criterion = Loss(args,mode='focal')
+    weight = [0.22762148, 0.22762148, 0.91752577, 0.22791293, 0.22967742, 1.11949686, 0.99441341, 0.72357724,
+              0.71485944, 1, 0.71774194]
+    if(args.auxiliary is not None):
+        CRITERION = dict(
+            auxiliary=dict(
+                losses=dict(
+                    ce=dict(reduction='mean',weight=weight)
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[0.5, 0.5]
+                # loss_weights = [1]
+            ),
+            trunk=dict(
+                losses=dict(
+                    ce=dict(reduction='mean', weight=weight)
+                    , dice=dict(smooth=1, p=2, reduction='mean')
+                ),
+                loss_weights=[0.5, 0.5]
+                # loss_weights=[0.5,0.5]
+                # loss_weights=[1]
+            )
+        )
+    else:
+        CRITERION = dict(
+            auxiliary=None,
+            trunk=dict(
+                losses=dict(
+                     ce=dict(reduction='mean')
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
+                    ,focal = dict(reduction='mean', alpha=torch.softmax(torch.Tensor(weight), dim=0))
+                ),
+                loss_weights=[0.34,0.33,0.33]
+            )
+        )
+    criterion = build_criterion(**CRITERION)
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # set random seed for all GPU
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
@@ -128,6 +163,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
+    parser.add_argument('--backbone', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)

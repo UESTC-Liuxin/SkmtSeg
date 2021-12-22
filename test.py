@@ -81,7 +81,7 @@ class Tester(object):
                 self.evaluator.add_batch(gt, pred)
                 # print(section_gt,output['section_out'].squeeze(0),name)
                 section_acc = (section_gt == section_pred).sum() + section_acc
-                self.visualize(gt, pred, iter, writer, "test")
+                # self.visualize(gt, pred, iter, writer, "test")
 
         writer.add_scalar('test/section_acc', section_acc / len(self.dataloader.dataset), epoch)
         self.logger.info('======>epoch:{}---loss:{:.3f}---section_acc:{:.3f}'.
