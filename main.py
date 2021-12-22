@@ -20,7 +20,9 @@ from criterion import build_criterion
 from utils.summaries import TensorboardSummary
 from utils.modeltools import netParams
 from utils.set_logger import get_logger
-from dataloader import SkmtDataSet
+
+from dataloader.skmt import SkmtDataSet
+from dataloader.simplers import CustomRandomSampler, BatchSampler
 from tools.train import Trainer
 from tools.test import Tester
 from modeling import build_skmtnet

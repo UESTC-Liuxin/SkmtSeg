@@ -84,7 +84,7 @@ class Tester(object):
 
                 self.evaluator.add_batch(gt, pred)
 
-                self.visualize(gt, pred, iter, writer, "test")
+                # self.visualize(gt, pred, iter, writer, "test")
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
         writer.add_scalar('test/loss_epoch', sum(tloss)/len(tloss), epoch)
