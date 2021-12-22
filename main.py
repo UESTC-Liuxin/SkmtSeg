@@ -32,8 +32,8 @@ def main(args,logger,summary):
     cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
                              # our hardware
 
-    seed = 6000
-    #seed =  random.randint(1, 10000)
+    # seed = 6000
+    seed =  random.randint(1, 10000)
     logger.info('======>random seed {}'.format(seed))
 
     random.seed(seed)  # python random seed
