@@ -130,13 +130,13 @@ class Trainer(object):
             self.optimizer.step()
             tloss.append(loss.item())
 
-            if (iter % self.args.show_interval == 0):
-                pred=np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
-                gt = batch['label'][0]  #每次显示第一张图片
-                img = batch['realImg'][0]
-                gt=np.asarray(gt.cpu(), dtype=np.uint8)
-                img= np.asarray(img.cpu(), dtype=np.uint8)
-                self.visualize(img,gt, pred, epoch*1000+iter,writer,"train")
+            # if (iter % self.args.show_interval == 0):
+            #     pred=np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
+            #     gt = batch['label'][0]  #每次显示第一张图片
+            #     img = batch['realImg'][0]
+            #     gt=np.asarray(gt.cpu(), dtype=np.uint8)
+            #     img= np.asarray(img.cpu(), dtype=np.uint8)
+            #     self.visualize(img,gt, pred, epoch*1000+iter,writer,"train")
 
         self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch, sum(tloss) / len(tloss)))
         writer.add_scalar('train/loss_epoch', sum(tloss) / len(tloss), epoch)

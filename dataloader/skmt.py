@@ -141,7 +141,6 @@ class SkmtDataSet(Dataset):
 
         return composed_transforms(sample)
 
-        # get_ISPRS and encode_segmap generate label map[
     @classmethod
     def encode_segmap(cls, mask):
         """Encode segmentation label images as pascal classes

@@ -31,8 +31,8 @@ def main(args,logger,summary):
     cudnn.benchmark = True   # cudnn auto-tuner to find the best algorithm to use for
                              # our hardware
 
-    # seed = random.randint(1, 10000)
-    seed =920
+    seed = random.randint(1, 10000)
+    # seed =920
     logger.info('======>random seed {}'.format(seed))
 
     random.seed(seed)  # python random seed
@@ -87,13 +87,12 @@ def main(args,logger,summary):
             ),
             trunk=dict(
                 losses=dict(
-                    ce=dict(reduction='mean')
-                    # ,focal = dict(reduction='mean',alpha=torch.softmax(1-torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS),dim=0))
-                    # ,dice=dict(smooth=1, p=2, reduction='mean')
+                    ce=dict(reduction='mean', weight=weight)
+                    , dice=dict(smooth=1, p=2, reduction='mean')
                 ),
-                #loss_weights=[0.34,0.33,0.33]
+                loss_weights=[0.5, 0.5]
                 # loss_weights=[0.5,0.5]
-                loss_weights=[1]
+                # loss_weights=[1]
             )
         )
     else:
