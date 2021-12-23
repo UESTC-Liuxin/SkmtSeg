@@ -22,8 +22,7 @@ class SkmtDataSet(Dataset):
     """
     CLASSES = ('background', 'SAS', 'LHB', 'D',
                'HH', 'SUB', 'SUP', 'GL', 'GC',
-               'SCB', 'INF', 'C', 'TM', 'SHB',
-               'LHT', 'SAC', 'INS','BBLH','LHBT')
+               'SCB', 'INF')
 
     PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
                [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],

@@ -124,7 +124,6 @@ class VisionTransformer(nn.Module):
                         unit.load_from(res_weight, n_block=bname, n_unit=uname)
 
 def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
-
     n_skip=3
     vit_name='R50-ViT-B_16'
     vit_patches_size= 16

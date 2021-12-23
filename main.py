@@ -75,6 +75,8 @@ def main(args,logger,summary):
     # , weight = np.array(SkmtDataSet.CLASSES_PIXS_WEIGHTS)
     weight = [0.22762148, 0.22762148, 0.91752577, 0.22791293, 0.22967742, 1.11949686, 0.99441341, 0.72357724,
               0.71485944, 1, 0.71774194]
+    # weight = [0.0326274, 0.47834152,0.26023913,0.25890819,0.39852193,2.95347985,2.74947394,14.42599523,
+    #           2.89106704,22.28744334,1]
     if(args.auxiliary is not None):
         CRITERION = dict(
             auxiliary=dict(

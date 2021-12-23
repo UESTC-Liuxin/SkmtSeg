@@ -29,9 +29,9 @@ for i in data.columns:
         if k>10:
             continue
         if str(j) == 'nan':
-            print('[{},{},{}]'.format(k,i, 0), end=",")
+            print('[{},{},{}]'.format(i,10-k, 0), end=",")
         else:
-            print('[{},{},{:.2f}]'.format(k,i,int(j)/fenmu[k]),end = ",")
+            print('[{},{},{:.2f}]'.format(i,10-k,int(j)/fenmu[k]),end = ",")
         k=k+1
 ##列和
 # for i in data.columns:

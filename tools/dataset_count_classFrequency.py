@@ -42,7 +42,7 @@ def frequence():
         '''for h in range(0, img.shape[0]):
             for w in range(0, img.shape[1]):
                 (b,g,r) = img[h,w]
-                if (b,g,r) != (0, 0, 0):  
+                if (b,g,r) != (0, 0, 0):
                     print((b,g,r))'''
         for ii, label in enumerate(SkmtDataSet.CLASSES):
             #if ii != 0:
@@ -53,9 +53,14 @@ def frequence():
 
     for ii, label in enumerate(SkmtDataSet.CLASSES):
         print('{}: pixs:{:.0f} num:{:.0f}  frequent:{:.2f}'.format(label,class_pixs[ii], clss_n[ii],f_class[ii]))
-    # f_class_median = np.median(np.array(f_class))
-    # print(f_class_median)
-    # print(f_class_median / np.array(f_class))
+
+    f_class_median = np.median(np.array(f_class))
+    print(f_class_median)
+    print(f_class_median / np.array(f_class))
+
+    f_class_median = np.median(np.array(class_pixs))
+    print(f_class_median)
+    print(f_class_median / np.array(class_pixs))
 
 
 if __name__ == '__main__':

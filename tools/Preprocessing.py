@@ -7,12 +7,12 @@ import cv2
 from dataloader.skmt import SkmtDataSet
 from dataloader.transforms_utils import augment as au
 import copy
-dataset_root = '../data/SKMT/Seg'
+dataset_root = 'data/SKMT/Seg'
 images_path = os.path.join(dataset_root, 'JPEGImages')
 lable_path =  os.path.join(dataset_root, 'SegmentationClass')
-save_path = '../sav_pro'
-save_path_seg='../sav_seg'
-save_path_img='../sav_img'
+save_path = 'sav_pro'
+save_path_seg='sav_seg'
+save_path_img='sav_img'
 def decode_segmap(label_mask):
     label_colours = SkmtDataSet.PALETTE
     n_classes = len(label_colours)
@@ -48,6 +48,9 @@ def encode_segmap( mask):
     label_mask = label_mask.astype(int)
     return label_mask
 def preprocessing(img,lable):
+    """
+    preprocessing 裁剪图片
+    """
     # img=cv2.GaussianBlur(img,(5,5),0)
     # mask=np.zeros(img.shape,dtype=np.uint8)
     augm = au.Augment()
@@ -104,10 +107,10 @@ if __name__ == '__main__':
         # lable = decode_segmap(lable)
 
         img_1,lable_1=preprocessing(img,lable)
-        img =resize_(img)
-        lable = resize_(lable)
-        img_1 = resize_(img_1)
-        lable_1 = resize_(lable_1)
+        # img =resize_(img)
+        # lable = resize_(lable)
+        # img_1 = resize_(img_1)
+        # lable_1 = resize_(lable_1)
 
         lable = Image.fromarray(np.uint8(lable))
         lable_1 = Image.fromarray(np.uint8(lable_1))
