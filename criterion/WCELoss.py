@@ -16,7 +16,7 @@ class WCELoss(nn.Module):
                  *args,**kwargs):
         super(WCELoss,self).__init__()
         if(weight):
-            weight=torch.Tensor(weight).cuda()
+            weight=torch.softmax(torch.Tensor(weight),dim=0).cuda()
         self.loss=nn.CrossEntropyLoss(weight,*args,**kwargs)
 
     def forward(self,logit, target):
