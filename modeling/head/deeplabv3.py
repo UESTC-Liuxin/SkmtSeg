@@ -11,8 +11,8 @@ from modeling.backbone import build_backbone
 class DeepLab(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepLab, self).__init__()
-        self.backbone = backbone
-        self.aspp = build_aspp(backbone,2048, output_stride, BatchNorm)
+        self.backbone=backbone
+        self.aspp = build_aspp(backbone, 2048,output_stride, BatchNorm)
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
@@ -20,9 +20,9 @@ class DeepLab(nn.Module):
 
     def forward(self, inputs):
         x = self.aspp(inputs[0])
-        if(self.backbone in ['xception','drn','mobilenet']):#不同的backbone有不同的输出，处理不同
+        if(self.backbone=='xception'):#不同的backbone有不同的输出，处理不同
             low_level_feat = inputs[1]
-        elif(self.backbone in ['resnet50','resnet101','wide_resnet50_2']):
+        elif(self.backbone in ['resnet50','resnet101']):
             low_level_feat = inputs[3]
         else:
             NotImplementedError

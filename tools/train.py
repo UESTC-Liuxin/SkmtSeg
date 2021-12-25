@@ -12,8 +12,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from utils.lr_scheduler import LR_Scheduler
-import math
+
 class Trainer(object):
 
     def __init__(self,args,dataloader:DataLoader,model:nn.Module,optimizer,
@@ -36,8 +35,6 @@ class Trainer(object):
         self.criterion=criterion
         self.optimizer=optimizer
         self.start_epoch=0
-        #self.scheduler = LR_Scheduler('poly', args.lr, args.max_epochs, len(self.dataloader),
-        #                              lr_step=30)
         #进行训练恢复
         if(args.resume):
             self.resume()
@@ -55,29 +52,11 @@ class Trainer(object):
         """
         poly learning stategyt
         lr = baselr*(1-iter/max_iter)^power
-        Step mode: ``lr = baselr * 0.1 ^ {floor(epoch-1 / lr_step)}``
-        Cosine mode: ``lr = baselr * 0.5 * (1 + cos(iter/maxiter))``
-        Poly mode: ``lr = baselr * (1 - iter/maxiter) ^ 0.9``
         """
         cur_iter = epoch * perEpoch_iter + curEpoch_iter
         max_iter = max_epoch * perEpoch_iter
-        ##poly
         lr = baselr * pow((1 - 1.0 * cur_iter / max_iter), 0.9)
 
-        ##'cos'
-        # lr = 0.5 * baselr * (1 + math.cos(1.0 * cur_iter / max_iter * math.pi))
-
-        ##'step'
-        # lr = baselr * (0.1 ** (epoch // 5))
-        # if epoch==5:
-        #     lr=3*1e-3
-        # elif epoch== 10:
-        #     lr=1*1e-3
-        # elif epoch == 15:
-        #     lr = 5*1e-4
-        # else:
-        #     lr = 1e-4
-        #=['poly', , 'cos'],
         return lr
 
     def dict_to_cuda(self,tensors):
@@ -88,7 +67,7 @@ class Trainer(object):
             cuda_tensors[key]=value
         return cuda_tensors
 
-    def train_one_epoch(self,epoch,writer,best_pred):
+    def train_one_epoch(self,epoch,writer):
         """
 
         :param epoch:
@@ -109,22 +88,18 @@ class Trainer(object):
             )
             for param_group in self.optimizer.param_groups:
                 param_group['lr'] = lr
-            # self.scheduler(self.optimizer, iter, epoch, best_pred)
-
             # start_time = time.time()
             batch=self.dict_to_cuda(batch)
+            output=self.model(batch)
 
-            if self.args.deep_supervision:
-                outputs = self.model(batch)
-                loss = 0
-                for outputl in outputs['trunk_out']:
-                    sample = {'trunk_out': outputl, 'auxiliary_out': outputs['auxiliary_out']}
-                    loss += self.criterion(sample, batch['label'])
-                loss /= len(outputs)
-                output = {'trunk_out': outputs['trunk_out'][-1], 'auxiliary_out': outputs['auxiliary_out']}
-            else:
-                output=self.model(batch)
-                loss = self.criterion(output,batch['label'])
+            loss = self.criterion(
+                pred=output,
+                gt=batch['label'],
+                epoch=epoch,
+                max_epoch=self.args.max_epochs,
+                curEpoch_iter=iter,
+                perEpoch_iter=total_batches
+            )
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -133,15 +108,14 @@ class Trainer(object):
             # if (iter % self.args.show_interval == 0):
             #     pred=np.asarray(np.argmax(output['trunk_out'][0].cpu().detach(), axis=0), dtype=np.uint8)
             #     gt = batch['label'][0]  #每次显示第一张图片
-            #     img = batch['realImg'][0]
             #     gt=np.asarray(gt.cpu(), dtype=np.uint8)
-            #     img= np.asarray(img.cpu(), dtype=np.uint8)
-            #     self.visualize(img,gt, pred, epoch*1000+iter,writer,"train")
+            #     self.visualize(gt, pred, epoch*1000+iter,writer,"train")
 
-        self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch, sum(tloss) / len(tloss)))
-        writer.add_scalar('train/loss_epoch', sum(tloss) / len(tloss), epoch)
 
-    def visualize(self,img,gt,pred,epoch,writer,title):
+        self.logger.info('======>epoch:{}---loss:{:.3f}'.format(epoch,sum(tloss)/len(tloss)))
+        writer.add_scalar('train/loss_epoch', sum(tloss)/len(tloss), epoch)
+
+    def visualize(self,gt,pred,epoch,writer,title):
         """
 
         :param input:
@@ -150,17 +124,13 @@ class Trainer(object):
         :return:
         """
         gt = self.dataloader.dataset.decode_segmap(gt)
-        pred = self.dataloader.dataset.decode_segmap(pred)
+        pred=self.dataloader.dataset.decode_segmap(pred)
         gt = np.array(gt).astype(np.float32).transpose((2, 0, 1))
         gt = torch.from_numpy(gt).type(torch.FloatTensor)
         pred = np.array(pred).astype(np.float32).transpose((2, 0, 1))
         pred = torch.from_numpy(pred).type(torch.FloatTensor)
-
-        img = img.astype(np.float32).transpose((2, 0, 1))
-        img = torch.from_numpy(img).type(torch.FloatTensor)/255.0
-        img = torch.stack([img,gt, pred])
-        self.summary.visualize_image(writer, title, img, epoch)
-
+        img=torch.stack([gt,pred])
+        self.summary.visualize_image(writer,title,img,epoch)
 
 
 #TODO:用于调试的visualize代码，观察取的图片和裁剪的图片是否有问题

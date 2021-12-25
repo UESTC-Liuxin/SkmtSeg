@@ -56,11 +56,13 @@ class CaculateTLoss(nn.Module):
         self.trunk_crition=trunk_crition
 
 
-    def forward(self,pred,gt):
+    def forward(self,pred,gt,epoch,max_epoch,curEpoch_iter,perEpoch_iter):
+        cur_iter = epoch * perEpoch_iter + curEpoch_iter
+        max_iter = max_epoch * perEpoch_iter
         loss = self.trunk_crition(pred['trunk_out'], gt)
         if(self.auxiliary_criterion is not None):
             loss_aux=self.auxiliary_criterion(pred['auxiliary_out'],gt)
-            loss+=loss_aux
+            loss+=loss_aux*pow((1 - 1.0 * cur_iter / max_iter), 0.9)
         return loss
 
 
