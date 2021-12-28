@@ -64,7 +64,7 @@ class Tester(object):
         """
         self.model.eval()
         self.evaluator.reset()
-
+        total_batches = len(self.dataloader)
         tloss = []
         with torch.no_grad():
             pbar = tqdm(self.dataloader, ncols=100)
