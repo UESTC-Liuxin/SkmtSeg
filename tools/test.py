@@ -70,7 +70,6 @@ class Tester(object):
             pbar = tqdm(self.dataloader, ncols=100)
             for iter, batch in enumerate(pbar):
                 pbar.set_description("Testing Processing epoach:{}".format(epoch))
-                start_time = time.time()
 
                 batch = self.dict_to_cuda(batch)
                 output = self.model(batch)

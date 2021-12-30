@@ -77,7 +77,7 @@ def main(args,logger,summary):
         CRITERION = dict(
             auxiliary = dict(
                 losses = dict(
-                    ce = dict(reduction='mean',weight=weight),
+                    ce = dict(reduction='mean'),
                     dice = dict(smooth=1, p=2, reduction='mean')
                 ),
                 loss_weights = [0.5, 0.5]
@@ -98,10 +98,10 @@ def main(args,logger,summary):
             trunk = dict(
                 losses = dict(
                     ce = dict(reduction='mean')
-                    # dice=dict(smooth=1, p=2, reduction='mean')
+                    ,dice=dict(smooth=1, p=2, reduction='mean')
                     # focal = dict(reduction='mean', alpha=torch.softmax(1 - torch.Tensor(SkmtDataSet.CLASSES_PIXS_WEIGHTS), dim=0))
                 ),
-                loss_weights = [1]
+                loss_weights = [0.5,0.5]
             )
         )
     criterion = build_criterion(**CRITERION)
@@ -111,7 +111,6 @@ def main(args,logger,summary):
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
         model=model.cuda()
         criterion=criterion.cuda()
-
 
     start_epoch = 0
     best_mIoU = 0.
@@ -125,7 +124,7 @@ def main(args,logger,summary):
     for epoch in range(start_epoch,args.max_epochs):
         trainer.train_one_epoch(epoch,writer)
 
-        if(epoch%1==0):
+        if(epoch% args.show_val_interval==0):
             Acc,mAcc,mIoU,FWIoU,tb_overall,confusion_matrix=tester.test_one_epoch(epoch,writer)
 
             new_pred = mIoU
@@ -167,7 +166,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
-    parser.add_argument('--backbone', default=None, type=str)
+    parser.add_argument('--backbone', default="resnet101", type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
@@ -177,7 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float)
     parser.add_argument('--weight_decay', default=5e-4, type=float)
     parser.add_argument('--workers', type=int, default=4, help=" the number of parallel threads")
-    parser.add_argument('--show_interval', default=50, type=int)
+    parser.add_argument('--show_interval', default=5, type=int)
     parser.add_argument('--show_val_interval', default=1, type=int)
     parser.add_argument('--savedir', default="./runs", help="directory to save the model snapshot")
     # parser.add_argument('--logFile', default= "log.txt", help = "storing the training and validation logs")

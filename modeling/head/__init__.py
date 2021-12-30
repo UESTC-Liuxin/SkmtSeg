@@ -7,7 +7,7 @@
 @Created on: 2020/11/10 上午10:42
 """
 from modeling.head import fcn,deeplabv3,danet,deeplab_danet,dran,deeplabdran,unet
-from modeling.head import auxiliary_fcn,transunet
+from modeling.head import auxiliary_fcn,transunet,deepTrans
 
 def build_head(head,backbone,BatchNorm, output_stride, num_classes, img_size):
 
@@ -27,6 +27,9 @@ def build_head(head,backbone,BatchNorm, output_stride, num_classes, img_size):
         return deeplabdran.DeepDran(backbone, BatchNorm, output_stride, num_classes)
     elif head == "transunet":
         return transunet.transUnet(backbone, BatchNorm, output_stride, num_classes, img_size)
+    elif head == "transdeep":
+        return deepTrans.transdeep(backbone, BatchNorm, output_stride, num_classes, img_size)
+
     else:
         raise NotImplementedError
 

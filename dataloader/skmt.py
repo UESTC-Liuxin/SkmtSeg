@@ -119,12 +119,14 @@ class SkmtDataSet(Dataset):
 
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([
-            tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),
-            tr.RandomGaussianBlur(),
+            # tr.RandomHorizontalFlip(),#随机水平翻转
+            tr.RandomScaleCrop(base_size=self.args.image_size, crop_size=self.args.crop_size),  # 随机裁剪
+            tr.FixedResize(self.args.crop_size),
+            # resnet
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            # tr.Normalize(mean=(0.318, 0.318, 0.316), std=(0.114, 0.114, 0.115)),
             tr.ToTensor()]
-            )
+        )
 
         return composed_transforms(sample)
 
