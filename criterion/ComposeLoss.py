@@ -62,7 +62,7 @@ class CaculateTLoss(nn.Module):
         loss = self.trunk_crition(pred['trunk_out'], gt)
         if(self.auxiliary_criterion is not None):
             loss_aux=self.auxiliary_criterion(pred['auxiliary_out'],gt)
-            loss+=loss_aux*pow((1 - 1.0 * cur_iter / max_iter), 0.9)
+            loss+=loss_aux #*pow((1 - 1.0 * cur_iter / max_iter), 0.9)
         return loss
 
 

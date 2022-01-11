@@ -21,7 +21,7 @@ class DeepDran(nn.Module):
     def   __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepDran, self).__init__( )
         self.backbone = backbone
-        self.aspp = build_aspp(backbone, output_stride, BatchNorm)
+        self.aspp = build_aspp(backbone, 2048,output_stride, BatchNorm)
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
         if (backbone in ["resnet50", "resnet101"]):
             in_channels = 2048

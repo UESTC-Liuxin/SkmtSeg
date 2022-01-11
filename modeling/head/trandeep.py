@@ -21,8 +21,11 @@ class VisionTransformer(nn.Module):
         self.aspp = build_aspp(backbone, 512 , output_stride, BatchNorm)
         self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
         in_channels = 512
-        # self.net = multi_head_attention_2d(in_channels, in_channels, in_channels, num_classes, 4, 0.5, 'SAME')
-        self.head = DANetHead(512, num_classes, BatchNorm)
+        self.head = DANetHead(512, 256, BatchNorm)  #chaun
+        self.aspp = build_aspp(backbone, 256, output_stride, BatchNorm)
+
+        # self.head = DANetHead(512, num_classes, BatchNorm)  #bing
+        # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.config = config
 
@@ -31,12 +34,14 @@ class VisionTransformer(nn.Module):
             x = x.repeat(1,3,1,1)
         x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
         x= self.decoder1(x)
+        x= self.head(x)
         x = self.aspp(x)
         low_level_feat=features[1]
-        x0=self.head(features[0])
         x = self.decoder2(x, low_level_feat)
-        x0 = F.interpolate(x0, scale_factor=2, mode='bilinear', align_corners=True)
-        x = x0 + x
+
+        # x0 = self.head(features[0])
+        # x0 = F.interpolate(x0, scale_factor=2, mode='bilinear', align_corners=True)
+        # x = x0 + x
         x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
         return x
     def load_from(self, weights):

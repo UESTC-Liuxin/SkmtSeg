@@ -6,6 +6,9 @@
 @contact: xinliu1996@163.com
 @Created on: 2020/11/19 上午11:28
 """
+import sys
+sys.path.append("/home/lab/cyl/SkmtSeg/")
+
 import argparse
 import time
 import numpy as np
@@ -88,7 +91,7 @@ class Inferencer(object):
 
 def SegSkmt(args):
     # build model
-    model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+    model = build_skmtnet(backbone='resnet101', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes, output_stride=16, img_size=args.crop_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -110,14 +113,18 @@ def SegSkmt(args):
         img = transform(img).unsquzee(0).to(device)
         infer.inference(img)
     else:
-        files = os.listdir(args.imgs_path)
+        img_pa=os.path.join(args.imgs_path,'JPEGImages')
+        files = os.listdir(img_pa)
         for i, img_name in enumerate(tqdm(files)):
-            img2 = Image.open(os.path.join(args.imgs_path, img_name)).convert('RGB')
+            img2 = Image.open(os.path.join(img_pa, img_name)).convert('RGB')
             img = transform(img2)
-            img_sp=img_name.split(".")[0]
-            img_pre=img_sp+"_pre.jpg"
-            # img = np.array(img).astype(np.float32).transpose((2, 0, 1))
-            # img = torch.from_numpy(img).float()
+
+            lable_path = os.path.join(args.imgs_path,'SegmentationClass')
+            lable_name = img_name.split('.')[0] + ".png"
+            lable = Image.open(os.path.join(lable_path, lable_name))
+            lable = lable.resize((args.crop_size, args.crop_size), Image.NEAREST)
+
+            lable= infer.decode(np.array(lable))
 
             img = torch.unsqueeze(img, dim=0)
             img = img.to(device)
@@ -125,14 +132,15 @@ def SegSkmt(args):
             pre = infer.inference(sample)
             post = postprocess(pre, args.num_classes)
 
-            rrr = Image.new('RGB', (1536, 512), (0, 255, 0))
+            rrr = Image.new('RGB', (1024, 256), (0, 255, 0))
             pre = infer.decode(pre)
             post = infer.decode(post)
             rrr.paste(img2,(0, 0))  # 从0，0开始贴图
+            rrr.paste(lable,(256,0))
             rrr.paste(pre,(512,0))
-            rrr.paste(post, (1024,0))
-
+            rrr.paste(post, (768,0))
             rrr.save(os.path.join(args.savedir,img_name))
+
     end_time = time.time()
     cost_time = end_time - start_time
     print("finish it,cost ：%.8s s" % cost_time)
@@ -169,13 +177,13 @@ if __name__ == "__main__":
     import timeit
     start = timeit.default_timer()
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
-    parser.add_argument('--model', default='./checkpoints/best_model_1.pth', type=str)
-    parser.add_argument('--imgs_path', default='img', type=str)
-    parser.add_argument('--crop_size', default=512, type=int)
+    parser.add_argument('--model', default='./checkpoints/best_model.pth', type=str)
+    parser.add_argument('--imgs_path', default='data/SKMT/Seg/', type=str)
+    parser.add_argument('--crop_size', default=256, type=int)
     parser.add_argument('--num_classes', default=11, type=int)
     parser.add_argument('--auxiliary', default='fcn', type=str)
-    parser.add_argument('--trunk_head', default='nonlocalunet', type=str)
-    parser.add_argument('--savedir', default="results", help="directory to save the model snapshot")
+    parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--savedir', default="seg", help="directory to save the model snapshot")
     parser.add_argument('--gpus', type=str, default='0')
     args = parser.parse_args()
 

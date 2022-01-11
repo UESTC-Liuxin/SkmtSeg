@@ -137,12 +137,14 @@ class Embeddings(nn.Module):
             self.hybrid = True
         else:
             patch_size = _pair(config.patches["size"])
-            n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])
+            n_patches = (img_size[0] //patch_size[0]) * (img_size[1] // patch_size[1])
             self.hybrid = False
 
         if self.hybrid:
-            self.hybrid_model = ResNetV2(block_units=config.resnet.num_layers, width_factor=config.resnet.width_factor)
-            in_channels = self.hybrid_model.width * 16
+            #self.hybrid_model = ResNetV2(block_units=config.resnet.num_layers, width_factor=config.resnet.width_factor)
+            in_channels = 1024 #self.hybrid_model.width * 16
+        else:
+            in_channels =2048
         self.patch_embeddings = Conv2d(in_channels=in_channels,
                                        out_channels=config.hidden_size,
                                        kernel_size=patch_size,
@@ -153,15 +155,15 @@ class Embeddings(nn.Module):
 
 
     def forward(self, x):
-        if self.hybrid:
-            x, features = self.hybrid_model(x)
-        else:
-            features = None
-        x = self.patch_embeddings(x)  # (B, hidden. n_patches^(1/2), n_patches^(1/2))
+        # if self.hybrid:
+        #     x, features = self.hybrid_model(x)
+        # else:
+        features = None
+        x = self.patch_embeddings(x)  # (B, hidden , n_patches^(1/2), n_patches^(1/2))#8*768*8*8
+        # print(x.size())
         x = x.flatten(2)
-        x = x.transpose(-1, -2)  # (B, n_patches, hidden)
-
-        embeddings = x + self.position_embeddings
+        x = x.transpose(-1, -2)  # (B, n_patches, hidden)#8, 64, 768
+        embeddings = x + self.position_embeddings#1, 256, 768]
         embeddings = self.dropout(embeddings)
         return embeddings, features
 
@@ -365,4 +367,4 @@ class DecoderCup(nn.Module):
             else:
                 skip = None
             x = decoder_block(x, skip=skip)
-        return
+        return x

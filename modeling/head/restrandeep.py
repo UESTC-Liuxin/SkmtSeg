@@ -1,46 +1,56 @@
-""" Full assembly of the parts to form the complete network """
-
 from __future__ import division
-
+import torch.nn.functional as F
 import os
-
-import torch
-import torch.nn as nn
-
-from modeling.model_utils.da_att import DANetHead
-from modeling.model_utils.bifusion import BiFusion,Attention_block
-from modeling.model_utils.unet_parts import *
-from modeling.model_utils.transformer import *
+from modeling.model_utils.restransformer import *
 from modeling.model_utils import vit_seg_configs as seg_configs
-from utils.utils import init_weights,count_param
+from modeling.model_utils.aspp import build_aspp
+from modeling.model_utils.decoder import build_decoder
+from modeling.head.danet import DANetHead
 
 class VisionTransformer(nn.Module):
-    def __init__(self, config, img_size=224, num_classes=21843, zero_head=False, vis=False):
+    def __init__(self, backbone,BatchNorm, output_stride, config, img_size=256, num_classes=21843, zero_head=False, vis=False):
         super(VisionTransformer, self).__init__()
+        self.layer1 = Conv2d(in_channels=2048, out_channels=1024, kernel_size=3, stride=1, padding=1,
+                             bias=False)
         self.num_classes = num_classes
         self.zero_head = zero_head
         self.classifier = config.classifier
         self.transformer = Transformer(config, img_size, vis)
-        self.decoder = DecoderCup(config)
-        self.segmentation_head = SegmentationHead(
-            in_channels=config['decoder_channels'][-1],
-            out_channels=config['n_classes'],
-            kernel_size=3,
-        )
+
+        self.decoder1 = Decodercov(config)
+
+        self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
+        if (backbone in ["resnet50", "resnet101"]):
+            in_channels = 2048
+        else:
+            raise NotImplementedError
+
+        self.head = DANetHead(in_channels, num_classes, BatchNorm)
+        self.aspp = build_aspp(backbone, 512 , output_stride, BatchNorm)
+
+        # self.head = DANetHead(512, 256, BatchNorm)
+        # self.aspp = build_aspp(backbone, 256, output_stride, BatchNorm)
+        self.output_stride = output_stride
         self.config = config
 
-    def forward(self, x):
-        if x.size()[1] == 1:
-            x = x.repeat(1,3,1,1)
+    def forward(self, input):
+        x0=self.head(input[0])
+        # x=self.layer1(input[0])
+        x = input[1]
         x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        x = self.decoder(x, features)
-        logits = self.segmentation_head(x)
-        return logits
+        x= self.decoder1(x)
+        # x=self.head(x)
+        x = self.aspp(x)
+        low_level_feat=input[3]
+        x = self.decoder2(x, low_level_feat)
 
+        x0 = F.interpolate(x0, scale_factor=8, mode='bilinear', align_corners=True)
+        x = x0 + x
+        x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
+        return x
     def load_from(self, weights):
         with torch.no_grad():
 
-            res_weight = weights
             self.transformer.embeddings.patch_embeddings.weight.copy_(np2th(weights["embedding/kernel"], conv=True))
             self.transformer.embeddings.patch_embeddings.bias.copy_(np2th(weights["embedding/bias"]))
 
@@ -52,7 +62,7 @@ class VisionTransformer(nn.Module):
             posemb_new = self.transformer.embeddings.position_embeddings
             if posemb.size() == posemb_new.size():
                 self.transformer.embeddings.position_embeddings.copy_(posemb)
-            elif posemb.size()[1]-1 == posemb_new.size()[1]:
+            elif posemb.size()[1] - 1 == posemb_new.size()[1]:
                 posemb = posemb[:, 1:]
                 self.transformer.embeddings.position_embeddings.copy_(posemb)
             else:
@@ -75,16 +85,36 @@ class VisionTransformer(nn.Module):
                 for uname, unit in block.named_children():
                     unit.load_from(weights, n_block=uname)
 
-            if self.transformer.embeddings.hybrid:
-                self.transformer.embeddings.hybrid_model.root.conv.weight.copy_(np2th(res_weight["conv_root/kernel"], conv=True))
-                gn_weight = np2th(res_weight["gn_root/scale"]).view(-1)
-                gn_bias = np2th(res_weight["gn_root/bias"]).view(-1)
-                self.transformer.embeddings.hybrid_model.root.gn.weight.copy_(gn_weight)
-                self.transformer.embeddings.hybrid_model.root.gn.bias.copy_(gn_bias)
+            # if self.transformer.embeddings.hybrid:
+            #     self.transformer.embeddings.hybrid_model.root.conv.weight.copy_(np2th(res_weight["conv_root/kernel"], conv=True))
+            #     gn_weight = np2th(res_weight["gn_root/scale"]).view(-1)
+            #     gn_bias = np2th(res_weight["gn_root/bias"]).view(-1)
+            #     self.transformer.embeddings.hybrid_model.root.gn.weight.copy_(gn_weight)
+            #     self.transformer.embeddings.hybrid_model.root.gn.bias.copy_(gn_bias)
+            #
+            #     for bname, block in self.transformer.embeddings.hybrid_model.body.named_children():
+            #         for uname, unit in block.named_children():
+            #             unit.load_from(res_weight, n_block=bname, n_unit=uname)
 
-                for bname, block in self.transformer.embeddings.hybrid_model.body.named_children():
-                    for uname, unit in block.named_children():
-                        unit.load_from(res_weight, n_block=bname, n_unit=uname)
+class Decodercov(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        head_channels = 512
+        self.conv_more = Conv2dReLU(
+            config.hidden_size,
+            head_channels,
+            kernel_size=3,
+            padding=1,
+            use_batchnorm=True,
+        )
+    def forward(self, hidden_states):
+        B, n_patch, hidden = hidden_states.size()  # reshape from (B, n_patch, hidden) to (B, h, w, hidden)
+        h, w = int(np.sqrt(n_patch)), int(np.sqrt(n_patch))
+        x = hidden_states.permute(0, 2, 1)
+        x = x.contiguous().view(B, hidden, h, w)
+        x = self.conv_more(x)
+        return x
 
 def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
     n_skip=3
@@ -100,11 +130,11 @@ def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
         config_vit.patches.grid = (
         int(img_size / vit_patches_size), int(img_size / vit_patches_size))
 
-    model = VisionTransformer(config_vit, img_size, num_classes)
+    model = VisionTransformer(backbone,BatchNorm, output_stride, config_vit, img_size, num_classes)
     model.load_from(weights=np.load(config_vit.pretrained_path))
     return model
 
-def transUnet(backbone, BatchNorm, output_stride, num_classes,img_size, freeze_bn=False):
+def restransdeep(backbone, BatchNorm, output_stride, num_classes,img_size, freeze_bn=False):
     return _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size)
 
 CONFIGS = {
@@ -114,6 +144,7 @@ CONFIGS = {
     'ViT-L_32': seg_configs.get_l32_config(),
     'ViT-H_14': seg_configs.get_h14_config(),
     'R50-ViT-B_16': seg_configs.get_r50_b16_config(),
-    'R50-ViT-L_16': seg_configs.get_r50_l16_config(),
+    'R50-ViT-L_32': seg_configs.get_r50_l16_config(),
     'testing': seg_configs.get_testing(),
 }
+# wget https://storage.googleapis.com/vit_models/imagenet21k/R50-ViT-L_16.npz

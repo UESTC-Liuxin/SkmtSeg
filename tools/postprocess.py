@@ -6,10 +6,9 @@ import matplotlib.pyplot as plt
 import cv2
 from dataloader.skmt import SkmtDataSet
 
-dataset_root = './'
-images_path = './seg'
-#os.path.join(dataset_root, 'seg')
-save_path = './sav_seg'
+dataset_root = 'data/SKMT/Seg/'
+images_path =os.path.join(dataset_root, 'JPEGImages')
+save_path = 'seg'
 def find_pic(img,ii):
     img1 = np.zeros(img.shape, np.uint8)
     flag = False
@@ -100,14 +99,14 @@ if __name__ == '__main__':
         img1 = decode_segmap(img)
 
         img1 = Image.fromarray(np.uint8(img1))
-        img1.save(os.path.join('./sav_seg', image_name+'_n.png'))
+        img1.save(os.path.join('save_path', image_name+'_n.png'))
 
-        # temp = postprocess(img, 11)
-        # temp = decode_segmap(temp)
-        # temp = Image.fromarray(np.uint8(temp))
-        # #temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+        temp = postprocess(img, 11)
+        temp = decode_segmap(temp)
+        temp = Image.fromarray(np.uint8(temp))
+        #temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
         #
-        # temp.save(os.path.join(dataset_root, str(count) + '_new.png'))
+        temp.save(os.path.join(save_path, image_name+'_n.png'))
 
 
 
