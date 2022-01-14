@@ -28,6 +28,7 @@ class SectionClass(nn.Module):
         )
 
         f=lambda x: x//(output_stride*2)
+        # print(f(input_size) ** 2)
         self.linear1 = nn.Sequential(
             nn.Linear(512 * (f(input_size)**2),128),
             # nn.BatchNorm1d(128),

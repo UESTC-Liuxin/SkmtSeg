@@ -14,14 +14,14 @@ from modeling.head.section_cls import SectionClass
 
 
 class SkmtNet(nn.Module):
-    def __init__(self, backbone,auxiliary,trunk,num_classes):
+    def __init__(self, backbone,auxiliary,trunk,num_classes,img_size):
         super(SkmtNet, self).__init__()
         self.backbone=backbone
         self.auxiliary=auxiliary
         self.trunk=trunk
         self.num_classes=num_classes
 
-        self.section_cls=SectionClass("resnet50",nn.BatchNorm2d,16,512,5)
+        self.section_cls=SectionClass("resnet50",nn.BatchNorm2d,16,img_size,5)
 
     def forward(self, input):
         img = input['image']

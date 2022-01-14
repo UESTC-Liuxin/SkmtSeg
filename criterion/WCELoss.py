@@ -8,6 +8,7 @@
 """
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 class WCELoss(nn.Module):
@@ -15,7 +16,7 @@ class WCELoss(nn.Module):
     def __init__(self,weight=None,*args,**kwargs):
         super(WCELoss,self).__init__()
         if(weight):
-            weight=torch.Tensor(weight).cuda()
+            weight=torch.softmax(torch.FloatTensor(np.array(weight)), dim=0).cuda()
         self.loss=nn.CrossEntropyLoss(weight,*args,**kwargs)
 
     def forward(self,logit, target):

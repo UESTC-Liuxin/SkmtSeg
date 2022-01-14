@@ -16,7 +16,7 @@ from modeling.sync_batchnorm import SynchronizedBatchNorm1d,SynchronizedBatchNor
 
 
 
-def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stride=16,sync_bn=False):
+def build_skmtnet(backbone:str,auxiliary_head,trunk_head,img_size,num_classes,output_stride=16,sync_bn=False):
     """
     :param backbone:the name of backbone
     :param auxiliary_head:
@@ -43,7 +43,7 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes,output_stri
     #选择trunk head
     trunk_head_model = build_head(trunk_head,backbone,BatchNorm,output_stride=output_stride,num_classes=num_classes)
     #集成模型
-    return SkmtNet(backbone_model,auxiliary_head_model,trunk_head_model,num_classes)
+    return SkmtNet(backbone_model,auxiliary_head_model,trunk_head_model,num_classes,img_size)
 
 
 
