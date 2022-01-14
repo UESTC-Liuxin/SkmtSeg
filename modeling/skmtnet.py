@@ -38,7 +38,7 @@ class SkmtNet(nn.Module):
         elif(section==2):
             index=1
         else:
-            index=2
+            index = 2
         return index
 
 

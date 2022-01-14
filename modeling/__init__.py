@@ -51,9 +51,8 @@ def build_skmtnet(backbone:str,auxiliary_head,trunk_head,num_classes, img_size,o
     trunk_head_model3 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
                                    num_classes=num_classes,img_size=img_size)
     # trunk_head_model4 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
-    #                                num_classes=num_classes)
-    # trunk_head_model5 = build_head(trunk_head, backbone, BatchNorm, output_stride=output_stride,
-    #                                num_classes=num_classes)
+    #                                num_classes=num_classes,img_size=img_size)
+
 
     #集成模型
     return SkmtNet(backbone_model,auxiliary_head_model,
