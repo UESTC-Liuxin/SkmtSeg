@@ -361,10 +361,14 @@ class DecoderCup(nn.Module):
         x = hidden_states.permute(0, 2, 1)
         x = x.contiguous().view(B, hidden, h, w)
         x = self.conv_more(x)
+        decode_out=x
         for i, decoder_block in enumerate(self.blocks):
             if features is not None:
                 skip = features[i] if (i < self.config.n_skip) else None
             else:
                 skip = None
+            if skip is None:
+                fina = decoder_block(x, skip=skip)
+                return fina, decode_out, x
             x = decoder_block(x, skip=skip)
-        return x
+        return x, decode_out

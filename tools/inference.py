@@ -91,7 +91,7 @@ class Inferencer(object):
 
 def SegSkmt(args):
     # build model
-    model = build_skmtnet(backbone='resnet101', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+    model = build_skmtnet(backbone=args.backbone, auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes, output_stride=16, img_size=args.crop_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -117,6 +117,7 @@ def SegSkmt(args):
         files = os.listdir(img_pa)
         for i, img_name in enumerate(tqdm(files)):
             img2 = Image.open(os.path.join(img_pa, img_name)).convert('RGB')
+
             img = transform(img2)
 
             lable_path = os.path.join(args.imgs_path,'SegmentationClass')
@@ -135,6 +136,8 @@ def SegSkmt(args):
             rrr = Image.new('RGB', (1024, 256), (0, 255, 0))
             pre = infer.decode(pre)
             post = infer.decode(post)
+
+            img2= img2.resize((args.crop_size, args.crop_size), Image.NEAREST)
             rrr.paste(img2,(0, 0))  # 从0，0开始贴图
             rrr.paste(lable,(256,0))
             rrr.paste(pre,(512,0))
@@ -183,8 +186,9 @@ if __name__ == "__main__":
     parser.add_argument('--num_classes', default=11, type=int)
     parser.add_argument('--auxiliary', default='fcn', type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
+    parser.add_argument('--backbone', default='resnet101', type=str)
     parser.add_argument('--savedir', default="seg", help="directory to save the model snapshot")
-    parser.add_argument('--gpus', type=str, default='0')
+    parser.add_argument('--gpus', type=str, default='6')
     args = parser.parse_args()
 
     SegSkmt(args, )

@@ -117,7 +117,10 @@ class Tester(object):
         tb_cls.add_row(['iou'] + list(iou_cls))
         self.logger.info(tb_overall)
         self.logger.info(tb_cls)
-
+        writer.add_scalar('test/Ap', Acc, epoch)
+        writer.add_scalar('test/mAcc', mAcc, epoch)
+        writer.add_scalar('test/mIoU', mIoU, epoch)
+        writer.add_scalar('test/FWIoU', FWIoU, epoch)
 
         return Acc,mAcc,mIoU,FWIoU,tb_overall,confusion_matrix
 

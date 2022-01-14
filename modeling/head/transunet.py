@@ -15,7 +15,7 @@ from modeling.model_utils import vit_seg_configs as seg_configs
 from utils.utils import init_weights,count_param
 
 class VisionTransformer(nn.Module):
-    def __init__(self, config, img_size=224, num_classes=21843, zero_head=False, vis=False):
+    def __init__(self, config, img_size=256, num_classes=11, zero_head=False, vis=False):
         super(VisionTransformer, self).__init__()
         self.num_classes = num_classes
         self.zero_head = zero_head
@@ -33,7 +33,10 @@ class VisionTransformer(nn.Module):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
         x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        x = self.decoder(x, features)
+        x ,_ ,_= self.decoder(x, features)
+        # print(features[0].size())  #32*32*512
+        # print(features[1].size())  #64*64*256
+        # print(features[2].size())  #128*128*256
         logits = self.segmentation_head(x)
         return logits
 

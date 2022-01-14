@@ -5,16 +5,19 @@ import torch.nn.functional as F
 from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 
 class Decoder(nn.Module):
-    def __init__(self, num_classes, backbone, BatchNorm):
+    def __init__(self, num_classes, backbone, BatchNorm,low_level_in=None):
         super(Decoder, self).__init__()
-        if backbone in ['resnet50','resnet101','drn','wide_resnet50_2']:
-            low_level_inplanes = 256
-        elif backbone == 'xception':
-            low_level_inplanes = 128
-        elif backbone == 'mobilenet':
-            low_level_inplanes = 32
+        if low_level_in is not None:
+            low_level_inplanes = low_level_in
         else:
-            raise NotImplementedError
+            if backbone in ['resnet50','resnet101','drn','wide_resnet50_2']:
+                low_level_inplanes = 256
+            elif backbone == 'xception':
+                low_level_inplanes = 128
+            elif backbone == 'mobilenet':
+                low_level_inplanes = 32
+            else:
+                raise NotImplementedError
 
         self.conv1 = nn.Conv2d(low_level_inplanes, 48, 1, bias=False)
         self.bn1 = BatchNorm(48)
@@ -53,5 +56,5 @@ class Decoder(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-def build_decoder(num_classes, backbone, BatchNorm):
-    return Decoder(num_classes, backbone, BatchNorm)
+def build_decoder(num_classes, backbone, BatchNorm, low_level_in=None):
+    return Decoder(num_classes, backbone, BatchNorm ,low_level_in)

@@ -16,38 +16,62 @@ class VisionTransformer(nn.Module):
         self.zero_head = zero_head
         self.classifier = config.classifier
         self.transformer = Transformer(config, img_size, vis)
+        self.decoder = DecoderCup(config)
+        self.segmentation_head = SegmentationHead(
+            in_channels=config['decoder_channels'][-1],
+            out_channels=config['n_classes'],
+            kernel_size=3,
+        )
 
-        self.decoder1 = Decodercov(config)
 
-        self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
         if (backbone in ["resnet50", "resnet101"]):
             in_channels = 2048
         else:
             raise NotImplementedError
 
-        self.head = DANetHead(in_channels, num_classes, BatchNorm)
-        self.aspp = build_aspp(backbone, 512 , output_stride, BatchNorm)
-
+        self.head = DANetHead(512, num_classes, BatchNorm)
+        self.aspp = build_aspp(backbone, 2048 , output_stride, BatchNorm)
+        self.decoder2 = build_decoder(1024, 'resnet50', BatchNorm, low_level_in=1024)
         # self.head = DANetHead(512, 256, BatchNorm)
         # self.aspp = build_aspp(backbone, 256, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.config = config
 
     def forward(self, input):
-        x0=self.head(input[0])
-        # x=self.layer1(input[0])
-        x = input[1]
-        x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        x= self.decoder1(x)
-        # x=self.head(x)
-        x = self.aspp(x)
-        low_level_feat=input[3]
+        # x0=self.head(input[0])
+        x=self.aspp(input[0])
+        low_level_feat = input[1]
         x = self.decoder2(x, low_level_feat)
+        # print(x.size())
+        # x = input[1]
+        x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
 
-        x0 = F.interpolate(x0, scale_factor=8, mode='bilinear', align_corners=True)
-        x = x0 + x
-        x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
-        return x
+        features = []
+        features.append(input[2])
+        features.append(input[3])
+        features.append(input[5])
+        # print(features[0].size())
+        # print(features[1].size())
+        # print(features[2].size())
+        x,decode_out,_= self.decoder(x, features)
+        logits = self.segmentation_head(x)
+
+        x = self.head(decode_out)
+        x = F.interpolate(x, scale_factor=16, mode='bilinear', align_corners=True)
+        logits = logits + x
+        return logits
+
+        # x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
+        # x= self.decoder1(x)
+        # # x=self.head(x)
+        # x = self.aspp(x)
+        # low_level_feat=input[3]
+        # x = self.decoder2(x, low_level_feat)
+        #
+        # x0 = F.interpolate(x0, scale_factor=8, mode='bilinear', align_corners=True)
+        # x = x0 + x
+        # x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
+        # return x
     def load_from(self, weights):
         with torch.no_grad():
 
@@ -95,26 +119,6 @@ class VisionTransformer(nn.Module):
             #     for bname, block in self.transformer.embeddings.hybrid_model.body.named_children():
             #         for uname, unit in block.named_children():
             #             unit.load_from(res_weight, n_block=bname, n_unit=uname)
-
-class Decodercov(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        head_channels = 512
-        self.conv_more = Conv2dReLU(
-            config.hidden_size,
-            head_channels,
-            kernel_size=3,
-            padding=1,
-            use_batchnorm=True,
-        )
-    def forward(self, hidden_states):
-        B, n_patch, hidden = hidden_states.size()  # reshape from (B, n_patch, hidden) to (B, h, w, hidden)
-        h, w = int(np.sqrt(n_patch)), int(np.sqrt(n_patch))
-        x = hidden_states.permute(0, 2, 1)
-        x = x.contiguous().view(B, hidden, h, w)
-        x = self.conv_more(x)
-        return x
 
 def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
     n_skip=3

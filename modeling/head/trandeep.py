@@ -17,33 +17,44 @@ class VisionTransformer(nn.Module):
         self.classifier = config.classifier
         self.transformer = Transformer(config, img_size, vis)
 
-        self.decoder1 = Decodercov(config)
-        self.aspp = build_aspp(backbone, 512 , output_stride, BatchNorm)
         self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
         in_channels = 512
-        self.head = DANetHead(512, 256, BatchNorm)  #chaun
-        self.aspp = build_aspp(backbone, 256, output_stride, BatchNorm)
+        # self.head = DANetHead(512, 256, BatchNorm)  #chaun
+        self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
 
         # self.head = DANetHead(512, num_classes, BatchNorm)  #bing
         # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
-        self.config = config
+        self.decoder = DecoderCup(config)
+        self.segmentation_head = SegmentationHead(
+            in_channels=config['decoder_channels'][-1]*4,
+            out_channels=config['n_classes'],
+            kernel_size=3,
+        )
 
     def forward(self, x):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
         x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        x= self.decoder1(x)
-        x= self.head(x)
-        x = self.aspp(x)
+        _,decode_out,x1 =  self.decoder(x, features)
+        # print(x.size())
+        logits = self.segmentation_head(x1)
+        # print(logits.size())
+
+        # x0= self.head(decode_out)
+        x = self.aspp(decode_out)
         low_level_feat=features[1]
         x = self.decoder2(x, low_level_feat)
+        #
+        # x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
+        # x=x+x0
 
-        # x0 = self.head(features[0])
-        # x0 = F.interpolate(x0, scale_factor=2, mode='bilinear', align_corners=True)
-        # x = x0 + x
-        x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        x = logits + x
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+
         return x
+        # return x
     def load_from(self, weights):
         with torch.no_grad():
 
@@ -93,25 +104,6 @@ class VisionTransformer(nn.Module):
                     for uname, unit in block.named_children():
                         unit.load_from(res_weight, n_block=bname, n_unit=uname)
 
-class Decodercov(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        head_channels = 512
-        self.conv_more = Conv2dReLU(
-            config.hidden_size,
-            head_channels,
-            kernel_size=3,
-            padding=1,
-            use_batchnorm=True,
-        )
-    def forward(self, hidden_states):
-        B, n_patch, hidden = hidden_states.size()  # reshape from (B, n_patch, hidden) to (B, h, w, hidden)
-        h, w = int(np.sqrt(n_patch)), int(np.sqrt(n_patch))
-        x = hidden_states.permute(0, 2, 1)
-        x = x.contiguous().view(B, hidden, h, w)
-        x = self.conv_more(x)
-        return x
 
 def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
     n_skip=3
