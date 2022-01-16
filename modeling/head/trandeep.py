@@ -22,7 +22,7 @@ class VisionTransformer(nn.Module):
         # self.head = DANetHead(512, 256, BatchNorm)  #chaun
         self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
 
-        # self.head = DANetHead(512, num_classes, BatchNorm)  #bing
+        self.head = DANetHead(512, num_classes, BatchNorm)  #bing
         # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.decoder = DecoderCup(config)
