@@ -10,21 +10,28 @@ class DeepLabDANet(nn.Module):
     def __init__(self, backbone,BatchNorm, output_stride, num_classes,freeze_bn=False):
         super(DeepLabDANet, self).__init__()
         self.backbone=backbone
-        self.aspp = build_aspp(backbone,2048, output_stride, BatchNorm)
+
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
         if (backbone in ["resnet50", "resnet101"]):
             in_channels = 2048
         else:
             raise NotImplementedError
-        #self.net = multi_head_attention_2d(in_channels, in_channels, in_channels, num_classes, 4, 0.5, 'SAME')
+        #bing
+        self.aspp = build_aspp(backbone, 2048, output_stride, BatchNorm)
         self.head = DANetHead(in_channels, num_classes, BatchNorm)
+
+        #chuan
+        # self.aspp = build_aspp(backbone, in_channels//2, output_stride, BatchNorm)
+        # self.head = DANetHead(in_channels, in_channels//2, BatchNorm)
         self.output_stride = output_stride
         if freeze_bn:
             self.freeze_bn()
 
     def forward(self, inputs):
         x0 = self.head(inputs[0])
+        # x = self.head(inputs[0])
         x = self.aspp(inputs[0])
+        # x = self.aspp(x)
         if(self.backbone=='xception'):#不同的backbone有不同的输出，处理不同
             low_level_feat = inputs[1]
         elif(self.backbone in ['resnet50','resnet101']):

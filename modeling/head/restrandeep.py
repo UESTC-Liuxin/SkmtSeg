@@ -1,16 +1,14 @@
-""" Full assembly of the parts to form the complete network """
-
 from __future__ import division
 import torch.nn.functional as F
 import os
-from modeling.model_utils.transformer import *
+from modeling.model_utils.restransformer import *
 from modeling.model_utils import vit_seg_configs as seg_configs
 from modeling.model_utils.aspp import build_aspp
 from modeling.model_utils.decoder import build_decoder
 from modeling.head.danet import DANetHead
 
 class VisionTransformer(nn.Module):
-    def __init__(self, backbone,BatchNorm, output_stride, config, img_size=224, num_classes=21843, zero_head=False, vis=False):
+    def __init__(self, backbone,BatchNorm, output_stride, config, img_size=256, num_classes=21843, zero_head=False, vis=False):
         super(VisionTransformer, self).__init__()
         self.layer1 = Conv2d(in_channels=2048, out_channels=1024, kernel_size=3, stride=1, padding=1,
                              bias=False)
@@ -18,27 +16,44 @@ class VisionTransformer(nn.Module):
         self.zero_head = zero_head
         self.classifier = config.classifier
         self.transformer = Transformer(config, img_size, vis)
+        self.decoder = DecoderCup(config)
+        self.segmentation_head = SegmentationHead(
+            in_channels=config['decoder_channels'][-1],
+            out_channels=config['n_classes'],
+            kernel_size=3,
+        )
+        if (backbone in ["resnet50", "resnet101"]):
+            in_channels = 2048
+        else:
+            raise NotImplementedError
 
-        self.decoder1 = Decodercov(config)
-        self.aspp = build_aspp(backbone, 512 , output_stride, BatchNorm)
-        self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
-        # self.net = multi_head_attention_2d(in_channels, in_channels, in_channels, num_classes, 4, 0.5, 'SAME')
-        self.head = DANetHead(2048, num_classes, BatchNorm)
-        self.output_stride = output_stride
-        self.config = config
+        # self.head = DANetHead(512, num_classes, BatchNorm)
+        # self.aspp = build_aspp(backbone, 2048 , output_stride, BatchNorm)
+        # self.decoder2 = build_decoder(1024, 'resnet50', BatchNorm, low_level_in=1024)
+        # # self.head = DANetHead(512, 256, BatchNorm)
+        # # self.aspp = build_aspp(backbone, 256, output_stride, BatchNorm)
+        # self.output_stride = output_stride
+        # self.config = config
 
     def forward(self, input):
-        x=self.layer1(input[0])
-        x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        x= self.decoder1(x)
-        x = self.aspp(x)
-        low_level_feat=input[3]
-        # x0=self.head(input[0])
-        x = self.decoder2(x, low_level_feat)
-        # x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
-        # x = x0 + x
-        x = F.interpolate(x, scale_factor=self.output_stride / 4, mode='bilinear', align_corners=True)
-        return x
+        x = self.layer1(input[0])
+        x, attn_weights, _ = self.transformer(x)  # (B, n_patch, hidden)
+        features = []
+        features.append(input[2])
+        features.append(input[3])
+        features.append(input[5])
+        x, decode_out, _ = self.decoder(x, features)
+        logits = self.segmentation_head(x)
+        # x = self.aspp(x)
+        # low_level_feat = input[3]
+        # # x0=self.head(input[0])
+        # x = self.decoder2(x, low_level_feat)
+        # x = self.head(decode_out)
+        # x = F.interpolate(x, scale_factor=16, mode='bilinear', align_corners=True)
+        # logits = logits + x
+        return logits
+
+
     def load_from(self, weights):
         with torch.no_grad():
 
@@ -87,26 +102,6 @@ class VisionTransformer(nn.Module):
             #         for uname, unit in block.named_children():
             #             unit.load_from(res_weight, n_block=bname, n_unit=uname)
 
-class Decodercov(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        head_channels = 512
-        self.conv_more = Conv2dReLU(
-            config.hidden_size,
-            head_channels,
-            kernel_size=3,
-            padding=1,
-            use_batchnorm=True,
-        )
-    def forward(self, hidden_states):
-        B, n_patch, hidden = hidden_states.size()  # reshape from (B, n_patch, hidden) to (B, h, w, hidden)
-        h, w = int(np.sqrt(n_patch)), int(np.sqrt(n_patch))
-        x = hidden_states.permute(0, 2, 1)
-        x = x.contiguous().view(B, hidden, h, w)
-        x = self.conv_more(x)
-        return x
-
 def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
     n_skip=3
     vit_name='R50-ViT-B_16'
@@ -125,7 +120,7 @@ def _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size):
     model.load_from(weights=np.load(config_vit.pretrained_path))
     return model
 
-def transdeep(backbone, BatchNorm, output_stride, num_classes,img_size, freeze_bn=False):
+def restransdeep(backbone, BatchNorm, output_stride, num_classes,img_size, freeze_bn=False):
     return _transUnet(backbone, BatchNorm, output_stride, num_classes,img_size)
 
 CONFIGS = {
@@ -135,6 +130,7 @@ CONFIGS = {
     'ViT-L_32': seg_configs.get_l32_config(),
     'ViT-H_14': seg_configs.get_h14_config(),
     'R50-ViT-B_16': seg_configs.get_r50_b16_config(),
-    'R50-ViT-L_16': seg_configs.get_r50_l16_config(),
+    'R50-ViT-L_32': seg_configs.get_r50_l16_config(),
     'testing': seg_configs.get_testing(),
 }
+# wget https://storage.googleapis.com/vit_models/imagenet21k/R50-ViT-L_16.npz

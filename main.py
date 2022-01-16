@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', default='skmtnet', type=str)
     parser.add_argument('--auxiliary', default=None, type=str)
-    parser.add_argument('--backbone', default="resnet101", type=str)
+    parser.add_argument('--backbone', default=None, type=str)
     parser.add_argument('--trunk_head', default='deeplab', type=str)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--image_size', default=512, type=int)
