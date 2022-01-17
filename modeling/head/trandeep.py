@@ -22,7 +22,7 @@ class VisionTransformer(nn.Module):
         # self.head = DANetHead(512, 256, BatchNorm)  #chaun
         self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
 
-        self.head = DANetHead(512, num_classes, BatchNorm)  #bing
+        self.head = DANetHead(512, 512, BatchNorm)  #bing
         # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.decoder = DecoderCup(config)
@@ -35,8 +35,12 @@ class VisionTransformer(nn.Module):
     def forward(self, x):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
-        x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
-        _,decode_out,x1 =  self.decoder(x, features)
+        x, attn_weights, feature = self.transformer(x)  # (B, n_patch, hidden)
+        features = []
+        features.append(self.head(feature[0]))#32*32*512
+        features.append(feature[1])#64*64*256
+        features.append(feature[2])#128*128*64
+        x,decode_out,x1 =  self.decoder(x, features)
         # print(x.size())
         logits = self.segmentation_head(x1)
         # print(logits.size())
@@ -45,7 +49,7 @@ class VisionTransformer(nn.Module):
         x = self.aspp(decode_out)
         low_level_feat=features[1]
         x = self.decoder2(x, low_level_feat)
-        #
+
         # x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
         # x=x+x0
 
@@ -54,7 +58,6 @@ class VisionTransformer(nn.Module):
         x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
 
         return x
-        # return x
     def load_from(self, weights):
         with torch.no_grad():
 
