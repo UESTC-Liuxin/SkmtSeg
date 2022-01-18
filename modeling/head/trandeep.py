@@ -15,17 +15,19 @@ class VisionTransformer(nn.Module):
         self.classifier = config.classifier
         self.transformer = Transformer(config, img_size, vis)
 
-        # self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
+        self.decoder2 = build_decoder(num_classes, 'resnet50', BatchNorm)
         in_channels = 512
         # self.head = DANetHead(512, 256, BatchNorm)  #chaun
         # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         #
-        # self.head = DANetHead(512, num_classes, BatchNorm)  #bing
-        # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
+        self.head0 = DANetHead(512, 512, BatchNorm)  #bing
+        self.head1 = DANetHead(256, 256, BatchNorm)  # bing
+        self.head2 = DANetHead(64, 64, BatchNorm)  # bing
+        self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.decoder = DecoderCup(config)
         self.segmentation_head = SegmentationHead(
-            in_channels=config['decoder_channels'][-1],
+            in_channels=config['decoder_channels'][-1]*4,
             out_channels=config['n_classes'],
             kernel_size=3,
         )
@@ -33,25 +35,31 @@ class VisionTransformer(nn.Module):
     def forward(self, x):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
-        x, attn_weights, features = self.transformer(x)  # (B, n_patch, hidden)
+        x, attn_weights, feature = self.transformer(x)  # (B, n_patch, hidden)
+        features = []
+        features.append(self.head0(feature[0]))
+        features.append(self.head1(feature[1]))
+        features.append(self.head2(feature[2]))
+
         fina,decode_out,x1 =  self.decoder(x, features)
         # print(x.size())
-        logits = self.segmentation_head(fina)
+
+        logits = self.segmentation_head(x1)
         # print(logits.size())
 
         # x0= self.head(decode_out)
-        # x = self.aspp(decode_out)
-        # low_level_feat=features[1]
-        # x = self.decoder2(x, low_level_feat)
-        #
+        x = self.aspp(decode_out)
+        low_level_feat=features[1]
+        x = self.decoder2(x, low_level_feat)
+
         # x0 = F.interpolate(x0, scale_factor=4, mode='bilinear', align_corners=True)
         # x=x+x0
 
-        # x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
-        # x = logits + x
-        # x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        x = logits + x
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
 
-        return logits
+        return x
         # return x
     def load_from(self, weights):
         with torch.no_grad():

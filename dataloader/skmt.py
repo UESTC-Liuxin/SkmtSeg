@@ -20,14 +20,11 @@ class SkmtDataSet(Dataset):
     """
     PascalVoc dataset
     """
-    CLASSES = ('background', 'SAS', 'LHB', 'D',
-               'HH', 'SUB', 'SUP', 'GL', 'GC',
-               'SCB', 'INF', 'C', 'TM', 'SHB',
-               'LHT', 'SAC', 'INS','BBLH','LHBT')
+    CLASSES = ('background', 'SAS', 'LHB', 'D','HH',
+               'SUB', 'SUP', 'GL', 'GC','SCB', 'INF')
 
     PALETTE = np.asarray([[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
-               [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],
-               [192, 0, 0], [64, 128, 0]])
+               [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],[192, 0, 0], [64, 128, 64]])
 
     CLASSES_PIXS_WEIGHTS=(0.7450,0.0501,0.0016,0.0932 ,0.0611 ,
                           0.0085,0.0092,0.0014,0.0073,0.0012,0.0213)
