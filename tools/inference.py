@@ -180,7 +180,7 @@ if __name__ == "__main__":
     import timeit
     start = timeit.default_timer()
     parser = argparse.ArgumentParser(description='Semantic Segmentation...')
-    parser.add_argument('--model', default='./checkpoints/best_model.pth', type=str)
+    parser.add_argument('--model', default='./checkpoints/best_model1.pth', type=str)
     parser.add_argument('--imgs_path', default='data/SKMT/Seg/', type=str)
     parser.add_argument('--crop_size', default=256, type=int)
     parser.add_argument('--num_classes', default=11, type=int)

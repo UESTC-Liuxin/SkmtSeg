@@ -22,7 +22,9 @@ class VisionTransformer(nn.Module):
         # self.head = DANetHead(512, 256, BatchNorm)  #chaun
         self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
 
-        self.head = DANetHead(512, 512, BatchNorm)  #bing
+        self.head0 = DANetHead(512, 512, BatchNorm)  #bing
+        self.head1 = DANetHead(256, 256, BatchNorm)  # bing
+        self.head2 = DANetHead(64, 64, BatchNorm)  # bing
         # self.aspp = build_aspp(backbone, 512, output_stride, BatchNorm)
         self.output_stride = output_stride
         self.decoder = DecoderCup(config)
@@ -36,10 +38,14 @@ class VisionTransformer(nn.Module):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
         x, attn_weights, feature = self.transformer(x)  # (B, n_patch, hidden)
+        # features = []
+        # features.append(self.head(feature[0]))#32*32*512
+        # features.append(feature[1])#64*64*256
+        # features.append(feature[2])#128*128*64/
         features = []
-        features.append(self.head(feature[0]))#32*32*512
-        features.append(feature[1])#64*64*256
-        features.append(feature[2])#128*128*64
+        features.append(self.head0(feature[0]))
+        features.append(self.head1(feature[1]))
+        features.append(self.head2(feature[2]))
         x,decode_out,x1 =  self.decoder(x, features)
         # print(x.size())
         logits = self.segmentation_head(x1)
