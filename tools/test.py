@@ -137,6 +137,7 @@ class Tester(object):
         FWIoU = np.around(self.evaluator.Frequency_Weighted_Intersection_over_Union(), decimals=3)
         acc_cls = np.around(self.evaluator.Acc_Class(), decimals=3)
         iou_cls = np.around(self.evaluator.IoU_Class(), decimals=3)
+        confusion_matrix = np.around(self.evaluator.confusion_matrix, decimals=3)
 
         # Print info
         tb_overall.field_names = ["Acc", "mAcc", "mIoU", "FWIoU"]
@@ -147,7 +148,8 @@ class Tester(object):
         tb_cls.add_row(['iou'] + list(iou_cls))
         print(tb_overall)
         print(tb_cls)
-        return Acc, mAcc, mIoU, FWIoU, tb_overall
+        return Acc, mAcc, mIoU, FWIoU, tb_overall, confusion_matrix
+
 
 
 

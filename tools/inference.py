@@ -14,6 +14,7 @@ import skimage
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
+import pandas as pd
 from tqdm import tqdm
 import PIL.Image as Image
 from modeling import build_skmtnet
@@ -105,9 +106,9 @@ def decode_segmap(label_mask):
     return rgb
 def SegSkmt_test(args):
     # build model
-    model = build_skmtnet(backbone='resnet50',auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes,output_stride = 16, img_size=512)
-    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+    model = build_skmtnet(backbone=args.backbone,auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+                          num_classes=args.num_classes,output_stride = 16, img_size=args.image_size)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model.to(device)
 
@@ -120,14 +121,16 @@ def SegSkmt_test(args):
     kwargs = {'num_workers': 4, 'pin_memory': True}
     test_loader = DataLoader(val_set, batch_size=1, drop_last=True, shuffle=False, **kwargs)
     tester = Tester(args=args,dataloader=test_loader,model=model)
-    Acc, mAcc, mIoU, FWIoU, tb_overall = tester.test_finally()
-    print(Acc, mAcc, mIoU, FWIoU, tb_overall)
+    Acc, mAcc, mIoU, FWIoU, tb_overall,best_confusion_matrix = tester.test_finally()
+    data1 = pd.DataFrame(best_confusion_matrix)
+    data1.to_csv('confusion_matrix.csv')
+    print(Acc, mAcc, mIoU, FWIoU, tb_overall,best_confusion_matrix)
 
 def SegSkmt(args):
     # build model
-    model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
-                          num_classes=args.num_classes, output_stride=16, img_size=512)
-    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+    model = build_skmtnet(backbone=args.backbone, auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+                          num_classes=args.num_classes, output_stride=16, img_size=args.image_size)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     model.to(device)
 
@@ -163,14 +166,14 @@ def SegSkmt(args):
             pre = infer.inference(sample)
             post = postprocess(pre, args.num_classes)
 
-            rrr = Image.new('RGB', (2048, 512), (0, 255, 0))
+            rrr = Image.new('RGB', (args.crop_size*4, args.crop_size), (0, 255, 0))
             pre = infer.decode(pre)
             post = infer.decode(post)
             lable= infer.decode(np.array(lable))
             rrr.paste(img2,(0, 0))  # 从0，0开始贴图
-            rrr.paste(pre,(512,0))
-            rrr.paste(post, (1024,0))
-            rrr.paste(lable, (1536,0))
+            rrr.paste(pre,(args.crop_size,0))
+            rrr.paste(post, (args.crop_size*2,0))
+            rrr.paste(lable, (args.crop_size*3,0))
 
             rrr.save(os.path.join(args.savedir,img_name))
     end_time = time.time()
@@ -181,9 +184,9 @@ def SegSkmt(args):
 def uzip_model(args):
     # 在torch 1.6版本中重新加载一下网络参数
 
-    model = build_skmtnet(backbone='resnet50', auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
+    model = build_skmtnet(backbone=None, auxiliary_head=args.auxiliary, trunk_head=args.trunk_head,
                           num_classes=args.num_classes, output_stride=16)
-    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = nn.DataParallel(model)
     model.to(device)
     model.load_state_dict(torch.load(args.model))  # 加载模型参数，model_cp为之前训练好的模型参数（zip格式）
@@ -201,12 +204,13 @@ if __name__ == "__main__":
     parser.add_argument('--model', default='checkpoints/best_model.pth', type=str)
     parser.add_argument('--imgs_path', default='data/SKMT/Seg/JPEGImages', type=str)
     parser.add_argument('--num_classes', default=11, type=int)
-    parser.add_argument('--auxiliary', default="fcn", type=str)
-    parser.add_argument('--trunk_head', default='deeplab_danet', type=str)
+    parser.add_argument('--backbone', default=None, type=str)
+    parser.add_argument('--auxiliary', default=None, type=str)
+    parser.add_argument('--trunk_head', default='transdeep', type=str)
     parser.add_argument('--savedir', default="./results", help="directory to save the model snapshot")
-    parser.add_argument('--gpus', type=str, default='2')
-    parser.add_argument('--image_size', default=512, type=int)
-    parser.add_argument('--crop_size', default=512, type=int)
+    parser.add_argument('--gpus', type=str, default='0')
+    parser.add_argument('--image_size', default=256, type=int)
+    parser.add_argument('--crop_size', default=256, type=int)
     args = parser.parse_args()
 
-    SegSkmt(args, )
+    SegSkmt(args)
