@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-path = '../confusion_matrix.csv'
+path = 'confusion/confusion_matrix.csv'
 data = pd.DataFrame(pd.read_csv(path))
 
 z=0
